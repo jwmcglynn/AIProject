@@ -16,33 +16,7 @@ import System.Map;
 
 public class GUI extends JFrame{
 	private static final long serialVersionUID = -1017088708174674067L;
-	private CellType[][] grid;
-	
-	/*
-	 * 0. Empty
-	 * -1. Un-movable block
-	 * 1. Player 1
-	 * 2. Player 2
-	 * 3. Player 1 History move
-	 * 4. Player 2 History move
-	 */
-	
-	enum CellType {
-		Empty(0)
-		, Wall(-1)
-		, Player1(1)
-		, Player2(2);
-		
-		public final int id;
-		
-		CellType(int id) {
-			this.id = id;
-		}
-		
-		CellType() {
-			this.id = 0;
-		}
-	}
+	public TronMap map;
 	
 	public GUI(String filename) {
 		super("Tron");
@@ -58,14 +32,7 @@ public class GUI extends JFrame{
 	
 	public GUI(int x,int y){
 		super("Tron");
-		grid = new CellType[x][y];
-		for (int i = 0; i < x; ++i) {
-			for (int j = 0; j < y; ++j) {
-				grid[i][j] = CellType.Empty;
-			}
-		}
-
-		for (int i = 0; i < x; ++i) grid[i][0] = CellType.Wall;
+		map = new TronMap(x, y);
 		
 		setContentPane(new DrawingPane());
 		super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -74,20 +41,9 @@ public class GUI extends JFrame{
 		setVisible(true);
 	}
 	private void loadMap(String filename) {
-		Map.LoadFromFile(filename);
-		
-		grid = new CellType[Map.Width()][Map.Height()];
-		for (int i = 0; i < Map.Width(); ++i) {
-			for (int j = 0; j < Map.Height(); ++j) {
-				grid[i][j] = Map.IsWall(i, j) ? CellType.Wall : CellType.Empty;
-			}
-		}
-		
-		// Set player positions.
-		grid[Map.MyX()][Map.MyY()] = CellType.Player1;
-		grid[Map.OpponentX()][Map.OpponentY()] = CellType.Player2;
-
+		map = new TronMap(filename);
 	}
+	
 	private class DrawingPane extends JPanel{
 		private static final long serialVersionUID = -6796464330571528642L;
 		public DrawingPane(){
@@ -96,9 +52,9 @@ public class GUI extends JFrame{
 		}
 		@Override
 		public void paint(Graphics g){
-			for (int a=0;a<grid.length;a++){
-				for (int b=0;b<grid[a].length;b++){
-					g.setColor(SystemConstant.gridColor[grid[a][b].id+1]);
+			for (int a=0;a<map.grid.length;a++){
+				for (int b=0;b<map.grid[a].length;b++){
+					g.setColor(SystemConstant.gridColor[map.grid[a][b].id+1]);
 					g.fillRect(SystemConstant.sizeOfSideX+a*SystemConstant.sizeOfBlock, 
 							SystemConstant.sizeOfSideY+b*SystemConstant.sizeOfBlock, 
 							SystemConstant.sizeOfBlock, SystemConstant.sizeOfBlock);
