@@ -23,6 +23,8 @@ public class GUI extends JFrame{
 	 * -1. Un-movable block
 	 * 1. Player 1
 	 * 2. Player 2
+	 * 3. Player 1 History move
+	 * 4. Player 2 History move
 	 */
 	
 	enum CellType {
