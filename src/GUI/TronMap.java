@@ -102,16 +102,16 @@ public class TronMap {
 		else return player1;
 	}
 	
-	public static Point moveByDirection(Point pos, Direction dir) {
+	public Point moveByDirection(Point pos, Direction dir) {
 		switch (dir) {
 			case North:
-				return new Point(pos.x, pos.y - 1);
+				return new Point(pos.x, Math.max(pos.y - 1, 0));
 			case East:
-				return new Point(pos.x + 1, pos.y);
+				return new Point(Math.min(pos.x + 1, grid.length - 1), pos.y);
 			case South:
-				return new Point(pos.x, pos.y + 1);
+				return new Point(pos.x, Math.min(pos.y + 1, grid[0].length - 1));
 			case West:
-				return new Point(pos.x - 1, pos.y);
+				return new Point(Math.max(pos.x - 1, 0), pos.y);
 		}
 		
 		// Never occurs.

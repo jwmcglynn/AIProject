@@ -3,43 +3,62 @@ package GUI;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.Timer;
 
 import System.SystemConstant;
-import System.Map;
 
 public class GUI extends JFrame{
 	private static final long serialVersionUID = -1017088708174674067L;
 	public TronMap map;
+	public TronController controller;
+	private Timer gameTimer;
 	
 	public GUI(String filename) {
 		super("Tron");
 		
 		loadMap(filename);
-		
-		setContentPane(new DrawingPane());
-		super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		super.setJMenuBar(new MyMenuBar());
-		pack();
-		setVisible(true);
+		internalCtor();
 	}
 	
 	public GUI(int x,int y){
 		super("Tron");
 		map = new TronMap(x, y);
 		
+		internalCtor();
+	}
+	
+	private void internalCtor() {
+		controller = new TronController(TronController.GameType.HumanVsHuman, map);
+		
 		setContentPane(new DrawingPane());
 		super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		super.setJMenuBar(new MyMenuBar());
 		pack();
 		setVisible(true);
+		
+		addKeyListener(new GameInput());
+		
+		final GUI gui = this;
+		final int frameDelay = 500; // milliseconds.
+		
+		gameTimer = new Timer(frameDelay, new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				controller.update();
+				gui.getContentPane().repaint();
+			}
+		});
+		
+		gameTimer.start();
 	}
+	
 	private void loadMap(String filename) {
 		map = new TronMap(filename);
 	}
@@ -88,8 +107,20 @@ public class GUI extends JFrame{
 			else if (command.equals("quit")){
 				System.exit(0);
 			}
-			// TODO Auto-generated method stub
-			
 		}
+	}
+	
+	private class GameInput implements KeyListener {
+		public void keyTyped(KeyEvent e) {
+			// Ignore.
+		}
+		
+        public void keyReleased(KeyEvent e) {
+        	controller.keyReleased(e.getKeyCode());
+        }
+        
+        public void keyPressed(KeyEvent e) {
+             controller.keyPressed(e.getKeyCode());
+        }
 	}
 }

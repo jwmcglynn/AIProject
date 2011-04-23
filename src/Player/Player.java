@@ -21,4 +21,13 @@ public abstract class Player {
 		return next;
 	}
 	abstract public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer);
+	
+	
+	public void keyPressed(int keyCode) {
+		// For override later.
+	}
+	
+	public void keyReleased(int keyCode) {
+		// For override later.
+	}
 }
