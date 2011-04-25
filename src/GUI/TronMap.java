@@ -12,6 +12,8 @@ public class TronMap {
 	 * 2. Player 2
 	 * 3. Player 1 History move
 	 * 4. Player 2 History move
+	 * 5. Debug_Player1_Territory
+	 * 6. Debug_Player2_Territory
 	 */
 	public CellType[][] grid;
 	
@@ -22,7 +24,12 @@ public class TronMap {
 		Empty(0)
 		, Wall(-1)
 		, Player1(1)
-		, Player2(2);
+		, Player2(2)
+		, Player1Moved(3)
+		, Player2Moved(4)
+		, Debug_Player1_Territory(5)
+		, Debug_Player2_Territory(6)
+		, Debug_None_Territory(7);
 		
 		public final int id;
 		
@@ -52,7 +59,7 @@ public class TronMap {
 	
 	public static enum Player {
 		One
-		, Two
+		, Two;
 	}
 	
 	public TronMap(String filename) {
@@ -87,7 +94,12 @@ public class TronMap {
 		grid[player1.x][player1.y] = CellType.Player1;
 		grid[player2.x][player2.y] = CellType.Player2;
 	}
-	
+	public int width(){
+		return grid.length;
+	}
+	public int height(){
+		return grid[0].length;
+	}
 	public boolean isWall(int x, int y) {
 		return (grid[x][y] != CellType.Empty);
 	}

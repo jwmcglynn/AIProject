@@ -36,7 +36,7 @@ public class GUI extends JFrame{
 	}
 	
 	private void internalCtor() {
-		controller = new TronController(TronController.GameType.HumanVsHuman, map);
+		controller = new TronController(TronController.GameType.HumanVsAI, map);
 		
 		setContentPane(new DrawingPane());
 		super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

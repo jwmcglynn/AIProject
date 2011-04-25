@@ -23,6 +23,9 @@ public abstract class Player {
 	abstract public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer);
 	
 	
+	public boolean isAIPlayer(){
+		return false;
+	}
 	public void keyPressed(int keyCode) {
 		// For override later.
 	}
