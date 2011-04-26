@@ -21,24 +21,27 @@ public class TronMap {
 	public Point player2;
 	
 	public static enum CellType {
-		Empty(0)
-		, Wall(-1)
-		, Player1(1)
-		, Player2(2)
-		, Player1Moved(3)
-		, Player2Moved(4)
-		, Debug_Player1_Territory(5)
-		, Debug_Player2_Territory(6)
-		, Debug_None_Territory(7);
+		Empty(0, false)
+		, Wall(-1, true)
+		, Player1(1, true)
+		, Player2(2, true)
+		, Player1Moved(3, true)
+		, Player2Moved(4, true)
+		, Debug_Player1_Territory(5, false)
+		, Debug_Player2_Territory(6, false)
+		, Debug_None_Territory(7, false);
 		
 		public final int id;
+		public final boolean wall;
 		
-		CellType(int id) {
+		CellType(int id, boolean wall) {
 			this.id = id;
+			this.wall = wall;
 		}
 		
 		CellType() {
 			this.id = 0;
+			this.wall = false;
 		}
 	}
 	
@@ -100,8 +103,8 @@ public class TronMap {
 	public int height(){
 		return grid[0].length;
 	}
-	public boolean isWall(int x, int y) {
-		return (grid[x][y] != CellType.Empty);
+	public boolean isWall(Point pos) {
+		return grid[pos.x][pos.y].wall;
 	}
 	
 	public Point position(Player p) {

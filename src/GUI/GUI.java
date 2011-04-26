@@ -47,7 +47,7 @@ public class GUI extends JFrame{
 		addKeyListener(new GameInput());
 		
 		final GUI gui = this;
-		final int frameDelay = 500; // milliseconds.
+		final int frameDelay = 250; // milliseconds.
 		
 		gameTimer = new Timer(frameDelay, new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -56,7 +56,10 @@ public class GUI extends JFrame{
 			}
 		});
 		
+		gameTimer.setInitialDelay(1000);
 		gameTimer.start();
+		
+		getContentPane().repaint();
 	}
 	
 	private void loadMap(String filename) {

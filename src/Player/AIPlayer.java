@@ -87,7 +87,7 @@ public class AIPlayer extends Player {
 	private int calcTerritory(TronMap.Direction dir){
 		int space=0;
 		Point p = map.moveByDirection(self, dir);
-		if (map.isWall(p.x, p.y))
+		if (map.isWall(p))
 			return Integer.MIN_VALUE;
 		CellType preType = map.grid[p.x][p.y];
 		map.grid[p.x][p.y] = selfType;
