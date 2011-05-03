@@ -8,6 +8,12 @@ import GUI.TronMap.CellType;
 
 public class AIPlayer extends Player {
 	Thread movThread = new Thread();
+	
+	private class Distance{
+		int dis;
+		CellType fromWhom;
+	}
+	
 	private int[][] selfGrid;
 	private int[][] oppGrid;
 	private CellType selfType;
@@ -20,6 +26,7 @@ public class AIPlayer extends Player {
 	private boolean fail;
 	TronMap map;
 	TronMap.Player selfPlayer;
+	public final static TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
 	
 	public AIPlayer(TronMap.Player currentPlayer) {
 		super(currentPlayer);
@@ -30,6 +37,56 @@ public class AIPlayer extends Player {
 		fail = false;
 		// TODO to be implemented
 		movThread = new Thread();
+	}
+	private void calcGrid(Distance[][] grid){
+//		resetCalcGrid(grid);
+		grid[self.x][self.y].fromWhom = selfTerritory;
+		grid[self.x][self.y].dis=0;
+		grid[opp.x][opp.y].fromWhom = oppTerritory;
+		grid[opp.x][opp.y].dis = 0;
+		
+		for (int b=1;b<height-1;b++){
+			for (int a=1;a<width-1;a++){
+				if (map.grid[a][b].wall) continue;
+				int newDis;
+				CellType newType;
+				if (grid[a-1][b].dis<grid[a][b-1].dis){
+					newDis = grid[a-1][b].dis;
+					newType = grid[a-1][b].fromWhom;
+				}
+				else{
+					newDis = grid[a][b-1].dis;
+					newType = grid[a][b-1].fromWhom;
+				}
+				if (newDis==Integer.MAX_VALUE)
+					continue;
+				if (grid[a][b].dis>newDis){
+					grid[a][b].dis = newDis+1;
+					grid[a][b].fromWhom=newType;
+				}
+			}
+		}
+		for(int b=height-2;b>0;b--){
+			for (int a=width-2;a>0;a--){
+				if (map.grid[a][b].wall) continue;
+				int newDis;
+				CellType newType;
+				if (grid[a+1][b].dis<grid[a][b+1].dis){
+					newDis = grid[a+1][b].dis;
+					newType = grid[a+1][b].fromWhom;
+				}
+				else{
+					newDis = grid[a][b+1].dis;
+					newType = grid[a][b+1].fromWhom;
+				}
+				if (newDis==Integer.MAX_VALUE)
+					continue;
+				if (grid[a][b].dis>newDis){
+					grid[a][b].dis = newDis+1;
+					grid[a][b].fromWhom=newType;
+				}
+			}
+		}
 	}
 	public boolean fail(){
 		return fail;
@@ -156,6 +213,7 @@ public class AIPlayer extends Player {
 		calcGrid(this.self,0,selfGrid,true);
 		calcGrid(this.opp,0,oppGrid,true);
 		updateTerritoryGUI();
+		this.clearDebugGUI();
 
 		// TODO
 		return dir;
