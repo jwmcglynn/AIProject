@@ -23,7 +23,6 @@ public class GUI extends JFrame{
 	
 	public GUI(String filename) {
 		super("Tron");
-		
 		loadMap(filename);
 		internalCtor();
 	}
@@ -36,12 +35,13 @@ public class GUI extends JFrame{
 	}
 	
 	private void internalCtor() {
-		controller = new TronController(TronController.GameType.HumanVsAI, map);
+		controller = new TronController(TronController.GameType.AIVsAI, map);
 		
 		setContentPane(new DrawingPane());
 		super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		super.setJMenuBar(new MyMenuBar());
+//		super.setJMenuBar(new MyMenuBar());
 		pack();
+//		super.setLocation(1024, 0);
 		setVisible(true);
 		
 		addKeyListener(new GameInput());
@@ -53,10 +53,14 @@ public class GUI extends JFrame{
 			public void actionPerformed(ActionEvent evt) {
 				controller.update();
 				gui.getContentPane().repaint();
+				if (controller.m_gameOver){
+					gameTimer.stop();
+					gui.dispose();
+					StartUp.main(null);
+				}
 			}
 		});
-		
-		gameTimer.setInitialDelay(1000);
+		gameTimer.setInitialDelay(SystemConstant.TimeLimit);
 		gameTimer.start();
 		
 		getContentPane().repaint();

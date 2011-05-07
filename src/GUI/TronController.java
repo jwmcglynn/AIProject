@@ -7,7 +7,7 @@ public class TronController {
 	private Player m_player1;
 	private Player m_player2;
 	private TronMap m_map;
-	private boolean m_gameOver = false;
+	public boolean m_gameOver = false;
 	
 	public enum GameType {
 		HumanVsHuman

@@ -200,12 +200,15 @@ public class AIPlayer extends Player {
 		TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
 		TronMap.Direction dir = null;
 		for (int a=0;a<dirs.length;a++){
-			int newSpace;
-			if (space<(newSpace=calcTerritory(dirs[a]))){
+			int newSpace = calcTerritory(dirs[a]);
+			System.out.println(dirs[a] + " : " + newSpace);
+			if (space<newSpace){
 				space=newSpace;
 				dir = dirs[a];
 			}
 		}
+		if (dir==null)
+			dir = TronMap.Direction.North;
 		//*/
 		
 		
@@ -213,7 +216,7 @@ public class AIPlayer extends Player {
 		calcGrid(this.self,0,selfGrid,true);
 		calcGrid(this.opp,0,oppGrid,true);
 		updateTerritoryGUI();
-		this.clearDebugGUI();
+//		this.clearDebugGUI();
 
 		// TODO
 		return dir;
