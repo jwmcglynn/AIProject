@@ -30,7 +30,8 @@ public class TronController {
 		} else {
 			m_player2 = new AIPlayer(TronMap.Player.Two);
 		}
-		
+		if (m_player2.isAIPlayer())
+			((AIPlayer)m_player2).setDebugMessage(true);
 		m_map.grid[m_map.player1.x][m_map.player1.y] = TronMap.CellType.Player1;
 		m_map.grid[m_map.player2.x][m_map.player2.y] = TronMap.CellType.Player2;
 		

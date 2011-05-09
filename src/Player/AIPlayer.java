@@ -25,11 +25,15 @@ public class AIPlayer extends Player {
 	private int width, height;
 	private boolean fail;
 	TronMap map;
+	int move;
 	TronMap.Player selfPlayer;
 	public final static TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
+	private boolean enableDebug;
 	
 	public AIPlayer(TronMap.Player currentPlayer) {
 		super(currentPlayer);
+		enableDebug = false;
+		move =0;
 		selfGrid = null;
 		oppGrid = null;
 		self = null;
@@ -141,7 +145,68 @@ public class AIPlayer extends Player {
 				if (map.grid[a][b].id>=5)
 					map.grid[a][b] = CellType.Empty;
 	}
-	private int calcTerritory(TronMap.Direction dir){
+	private int calcTerritoryMinimax(TronMap.Direction dir,Point self,int depth){
+		if (depth%2==0) throw new RuntimeException("");
+		if (depth==1) 
+			return calcTerritory(dir,self);
+		else{
+			Point p = map.moveByDirection(self, dir);
+			CellType origin = map.grid[p.x][p.y];
+			if (map.isWall(p))
+				return Integer.MIN_VALUE;
+			map.grid[p.x][p.y] = selfType;
+			
+
+			int[][] currentSelfGrid = new int[width][height];
+			int[][] currentOppGrid = new int[width][height];
+			Point oppPtr = null;
+			int maxSpace=Integer.MIN_VALUE;
+			TronMap.Direction debugOppDir=null;
+			for (TronMap.Direction d:dirs){
+				Point p2 = map.moveByDirection(opp, d);
+				CellType ct = map.grid[p2.x][p2.y];
+				map.grid[p2.x][p2.y] = oppType;
+				calcGrid(p,0,currentSelfGrid,true);
+				calcGrid(p2,0,currentOppGrid,true);
+				int space=0;
+				for (int a=0;a<width;a++){
+					for (int b=0;b<height;b++){
+						if (map.grid[a][b].id==0 ||
+							map.grid[a][b].id>=5){
+							if (currentSelfGrid[a][b]<currentOppGrid[a][b])
+								space--;
+							else if (currentSelfGrid[a][b]>currentOppGrid[a][b])
+								space++;
+						}
+					}
+				}
+				if (maxSpace<space){
+					maxSpace=space;
+					oppPtr = p2;
+					debugOppDir = d;
+				}
+				map.grid[p2.x][p2.y] = ct;
+			}
+//			System.out.println(debugOppDir);
+			CellType origin2 = map.grid[oppPtr.x][oppPtr.y];
+			map.grid[oppPtr.x][oppPtr.y] = oppType;
+			
+			int value =  Integer.MIN_VALUE;
+			for (TronMap.Direction d: dirs){
+				int v = calcTerritoryMinimax(d,p,depth-2);
+				if (value<v)
+					value=v;
+			}
+			
+			
+			map.grid[oppPtr.x][oppPtr.y] = origin2;
+			map.grid[p.x][p.y] = origin;
+
+			
+			return value;
+		}
+	}
+	private int calcTerritory(TronMap.Direction dir,Point self){
 		int space=0;
 		Point p = map.moveByDirection(self, dir);
 		if (map.isWall(p))
@@ -150,6 +215,7 @@ public class AIPlayer extends Player {
 		map.grid[p.x][p.y] = selfType;
 		calcGrid(p,0,selfGrid,true);
 		calcGrid(opp,0,oppGrid,true);
+		
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
 				if (map.grid[a][b].id==0 ||
@@ -187,6 +253,9 @@ public class AIPlayer extends Player {
 			// TODO
 		}
 	}
+	public void setDebugMessage(boolean enable){
+		enableDebug = enable;
+	}
 	public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer) {
 		this.map = map;
 		selfPlayer = currentPlayer;
@@ -197,27 +266,36 @@ public class AIPlayer extends Player {
 		//*
 		clearDebugGUI();
 		int space = Integer.MIN_VALUE;
-		TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
+//		TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
 		TronMap.Direction dir = null;
+		System.out.println(move);
+		if (move==66)
+			System.out.println("Dead move");
 		for (int a=0;a<dirs.length;a++){
-			int newSpace = calcTerritory(dirs[a]);
+//			int newSpace = calcTerritory(dirs[a],self);
+			int newSpace = calcTerritoryMinimax(dirs[a],self,3);
 			System.out.println(dirs[a] + " : " + newSpace);
 			if (space<newSpace){
 				space=newSpace;
 				dir = dirs[a];
 			}
 		}
-		if (dir==null)
+		if (dir==null){
+			System.out.println("No where to move...");
 			dir = TronMap.Direction.North;
+		}
 		//*/
 		
 		
 		// GUI update
-		calcGrid(this.self,0,selfGrid,true);
-		calcGrid(this.opp,0,oppGrid,true);
-		updateTerritoryGUI();
+		if (enableDebug){
+			calcGrid(this.self,0,selfGrid,true);
+			calcGrid(this.opp,0,oppGrid,true);
+			updateTerritoryGUI();
+		}
 //		this.clearDebugGUI();
 
+		move++;
 		// TODO
 		return dir;
 	}
