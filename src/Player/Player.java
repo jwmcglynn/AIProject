@@ -6,19 +6,22 @@ import java.util.Stack;
 import GUI.TronMap;
 
 public abstract class Player {
-	protected Stack<Point> moves;
+	protected Stack<TronMap.Direction> moves;
 	
 	TronMap.Direction facingDir;
 	TronMap.Player playerId;
 	
 	protected Player(TronMap.Player currentPlayer) {
 		playerId = currentPlayer;
-		moves = new Stack<Point>();
+		moves = new Stack<TronMap.Direction>();
 		facingDir = TronMap.Direction.North;
 	}
-	protected Point move(Point next){
+	protected TronMap.Direction move(TronMap.Direction next){
 		moves.push(next);
 		return next;
+	}
+	public Stack<TronMap.Direction> getHistoryOfMove(){
+		return moves;
 	}
 	abstract public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer);
 	

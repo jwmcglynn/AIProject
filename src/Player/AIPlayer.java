@@ -282,8 +282,8 @@ public class AIPlayer extends Player {
 		//		TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
 		TronMap.Direction dir = null;
 		System.out.println(move);
-		if (move==66)
-			System.out.println("Dead move");
+//		if (move==66)
+//			System.out.println("Dead move");
 		for (int a=0;a<dirs.length;a++){
 			//			int newSpace = calcTerritory(dirs[a],self);
 			int newSpace = calcTerritoryMinimax(dirs[a],self,3,1);
@@ -305,6 +305,6 @@ public class AIPlayer extends Player {
 
 		move++;
 		// TODO
-		return dir;
+		return super.move(dir);
 	}
 }

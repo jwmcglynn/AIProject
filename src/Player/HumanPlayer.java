@@ -11,7 +11,7 @@ public class HumanPlayer extends Player {
 	}
 
 	public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer) {
-		return facingDir;
+		return super.move(facingDir);
 	}
 	
 	public void keyPressed(int keyCode) {
