@@ -14,5 +14,5 @@ public class SystemConstant {
 		new Color(150,0,0), new Color(0,0,150),
 		new Color(200,100,100), new Color(100,100,200),Color.WHITE};
 	public final static int KEY_TO_TERMINATE_AI = KeyEvent.VK_P;
-	
+	public final static double drawAvoidConst = 0.05;
 }
