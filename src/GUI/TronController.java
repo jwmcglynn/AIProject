@@ -28,7 +28,7 @@ public class TronController {
 		if (type == GameType.HumanVsHuman) {
 			m_player2 = new HumanPlayer(TronMap.Player.Two);
 		} else {
-			m_player2 = new AIPlayer(TronMap.Player.Two);
+			m_player2 = new AIContestPlayer(TronMap.Player.Two);
 		}
 		if (m_player2.isAIPlayer())
 			((AIPlayer)m_player2).setDebugMessage(true);
@@ -49,37 +49,47 @@ public class TronController {
 			System.exit(1);
 		}
 		
-		// Mark the old position in different color
-		m_map.grid[m_map.player1.x][m_map.player1.y] = TronMap.CellType.Player1Moved;
-		m_map.grid[m_map.player2.x][m_map.player2.y] = TronMap.CellType.Player2Moved;
-		
+		long startTime = System.nanoTime();
 		TronMap.Direction dir1 = m_player1.move(m_map, TronMap.Player.One);
-		TronMap.Direction dir2 = m_player2.move(m_map, TronMap.Player.Two);
+		long endTime = System.nanoTime();
+		System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
+		// Update player1 position.
+		m_map.grid[m_map.player1.x][m_map.player1.y] = TronMap.CellType.Player1Moved;
 		m_map.player1 = m_map.moveByDirection(m_map.player1, dir1);
-		m_map.player2 = m_map.moveByDirection(m_map.player2, dir2);
-		// Check for collision.
 		boolean valid1 = !m_map.isWall(m_map.player1);
-		boolean valid2 = !m_map.isWall(m_map.player2);
+		boolean valid2 = true;
 		
+		if (valid1) {
+			m_map.grid[m_map.player1.x][m_map.player1.y] = TronMap.CellType.Player1;
+			
+			// Run player2 move.
+			startTime = System.nanoTime();
+			TronMap.Direction dir2 = m_player2.move(m_map, TronMap.Player.Two);
+			endTime = System.nanoTime();
+			System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
+			
+			m_map.grid[m_map.player2.x][m_map.player2.y] = TronMap.CellType.Player2Moved;
+			m_map.player2 = m_map.moveByDirection(m_map.player2, dir2);
+			
+			valid2 = !m_map.isWall(m_map.player2);
+			m_map.grid[m_map.player2.x][m_map.player2.y] = TronMap.CellType.Player2;
+		}
+		
+		// Check for collision.
 		if (valid1 && valid2 && !m_map.player1.equals(m_map.player2)) {
 			// Make the move.
 			m_map.grid[m_map.player1.x][m_map.player1.y] = TronMap.CellType.Player1;
 			m_map.grid[m_map.player2.x][m_map.player2.y] = TronMap.CellType.Player2;
-		} else if ((!valid1 && !valid2) || m_map.player1.equals(m_map.player2)) {
-			// A tie.  Both players either made invalid moves or intersected the same square.
-			// TODO: Handle this case.
-			m_gameOver = true;
-			System.out.println("Game over, tie");
 		} else {
 			// One player died.  Who?
-			// TODO.
 			m_gameOver = true;
-			System.out.println("Game over");
+			if (valid1) {
+				System.out.println("Game over, player 1 wins.");
+			} else {
+				System.out.println("Game over, player 2 wins.");
+			}
 		}
-
-		m_map.grid[m_map.player1.x][m_map.player1.y] = TronMap.CellType.Player1;
-		m_map.grid[m_map.player2.x][m_map.player2.y] = TronMap.CellType.Player2;
 	}
 
 	public void keyPressed(int keyCode) {

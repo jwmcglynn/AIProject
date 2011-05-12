@@ -20,7 +20,12 @@ public class AIContestPlayer extends AIPlayer {
 	}
 	
 	protected Process createExternalProcess() throws IOException {
-		return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_mac", "0", "0"});
+		if (System.getProperty("os.name").startsWith("Windows")) {
+			return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_win.exe", "0"});
+		} else {
+			// Mac.
+			return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_mac", "0"});
+		}
 	}
 	
 	public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer) {

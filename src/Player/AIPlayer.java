@@ -286,7 +286,7 @@ public class AIPlayer extends Player {
 //			System.out.println("Dead move");
 		for (int a=0;a<dirs.length;a++){
 			//			int newSpace = calcTerritory(dirs[a],self);
-			int newSpace = calcTerritoryMinimax(dirs[a],self,3,1);
+			int newSpace = calcTerritoryMinimax(dirs[a],self,11,1);
 			System.out.println(dirs[a] + " : " + newSpace);
 			if (space<newSpace){
 				space=newSpace;
