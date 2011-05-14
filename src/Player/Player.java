@@ -1,29 +1,31 @@
 package Player;
 
 import java.awt.Point;
-import java.util.Stack;
-
+import java.util.ArrayList;
 import GUI.TronMap;
 
 public abstract class Player {
-	protected Stack<TronMap.Direction> moves;
+	protected ArrayList<TronMap.Direction> moves;
 	
 	TronMap.Direction facingDir;
-	TronMap.Player playerId;
+	TronMap.PlayerType playerId;
+	int move;
 	
-	protected Player(TronMap.Player currentPlayer) {
+	protected Player(TronMap.PlayerType currentPlayer) {
 		playerId = currentPlayer;
-		moves = new Stack<TronMap.Direction>();
+		moves = new ArrayList<TronMap.Direction>();
 		facingDir = TronMap.Direction.North;
+		move = 0;
 	}
 	protected TronMap.Direction move(TronMap.Direction next){
-		moves.push(next);
+		moves.add(next);
+		move++;
 		return next;
 	}
-	public Stack<TronMap.Direction> getHistoryOfMove(){
+	public ArrayList<TronMap.Direction> getHistoryOfMove(){
 		return moves;
 	}
-	abstract public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer);
+	abstract public TronMap.Direction move(TronMap map, TronMap.PlayerType currentPlayer);
 	
 	
 	public boolean isAIPlayer(){

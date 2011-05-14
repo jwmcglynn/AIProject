@@ -20,15 +20,15 @@ public class TronController {
 		
 		// Create player instances.
 		if (type == GameType.AIVsAI) {
-			m_player1 = new AIPlayer(TronMap.Player.One);
+			m_player1 = new AIUCITronPlayer(TronMap.PlayerType.One);
 		} else {
-			m_player1 = new HumanPlayer(TronMap.Player.One);
+			m_player1 = new HumanPlayer(TronMap.PlayerType.One);
 		}
 		
 		if (type == GameType.HumanVsHuman) {
-			m_player2 = new HumanPlayer(TronMap.Player.Two);
+			m_player2 = new HumanPlayer(TronMap.PlayerType.Two);
 		} else {
-			m_player2 = new AIContestPlayer(TronMap.Player.Two);
+			m_player2 = new AIContestPlayer(TronMap.PlayerType.Two);
 		}
 		if (m_player2.isAIPlayer())
 			((AIPlayer)m_player2).setDebugMessage(true);
@@ -50,7 +50,7 @@ public class TronController {
 		}
 		
 		long startTime = System.nanoTime();
-		TronMap.Direction dir1 = m_player1.move(m_map, TronMap.Player.One);
+		TronMap.Direction dir1 = m_player1.move(m_map, TronMap.PlayerType.One);
 		long endTime = System.nanoTime();
 		System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
@@ -65,7 +65,7 @@ public class TronController {
 			
 			// Run player2 move.
 			startTime = System.nanoTime();
-			TronMap.Direction dir2 = m_player2.move(m_map, TronMap.Player.Two);
+			TronMap.Direction dir2 = m_player2.move(m_map, TronMap.PlayerType.Two);
 			endTime = System.nanoTime();
 			System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 			

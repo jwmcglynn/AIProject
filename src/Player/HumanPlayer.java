@@ -4,18 +4,18 @@ import GUI.TronMap;
 import GUI.TronMap.Direction;
 
 public class HumanPlayer extends Player {
-	public HumanPlayer(TronMap.Player currentPlayer) {
+	public HumanPlayer(TronMap.PlayerType currentPlayer) {
 		super(currentPlayer);
-		if (currentPlayer == TronMap.Player.Two) facingDir = Direction.North; 
+		if (currentPlayer == TronMap.PlayerType.Two) facingDir = Direction.North; 
 		else facingDir = Direction.South; 
 	}
 
-	public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer) {
+	public TronMap.Direction move(TronMap map, TronMap.PlayerType currentPlayer) {
 		return super.move(facingDir);
 	}
 	
 	public void keyPressed(int keyCode) {
-		if (playerId == TronMap.Player.One) {
+		if (playerId == TronMap.PlayerType.One) {
 			switch (keyCode) {
 				case KeyEvent.VK_W:
 					facingDir = Direction.North;
