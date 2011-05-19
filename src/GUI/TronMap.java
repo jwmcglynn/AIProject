@@ -60,7 +60,7 @@ public class TronMap {
 		}
 	}
 	
-	public static enum Player {
+	public static enum PlayerType {
 		One
 		, Two;
 	}
@@ -107,13 +107,13 @@ public class TronMap {
 		return grid[pos.x][pos.y].wall;
 	}
 	
-	public Point position(Player p) {
-		if (p == Player.One) return player1;
+	public Point position(PlayerType p) {
+		if (p == PlayerType.One) return player1;
 		else return player2;
 	}
 	
-	public Point enemyPosition(Player p) {
-		if (p == Player.One) return player2;
+	public Point enemyPosition(PlayerType p) {
+		if (p == PlayerType.One) return player2;
 		else return player1;
 	}
 	

@@ -1,7 +1,7 @@
 package Player;
 
 import GUI.TronMap;
-import GUI.TronMap.Player;
+import GUI.TronMap.PlayerType;
 
 import java.awt.Point;
 import java.io.*;
@@ -16,7 +16,7 @@ public class AIContestPlayer extends AIPlayer {
 	
 	private AIType m_aiType;
 	
-	public AIContestPlayer(Player currentPlayer, AIType type) {
+	public AIContestPlayer(PlayerType currentPlayer, AIType type) {
 		super(currentPlayer);
 		
 		m_aiType = type;
@@ -44,7 +44,7 @@ public class AIContestPlayer extends AIPlayer {
 		}
 	}
 	
-	public TronMap.Direction move(TronMap map, TronMap.Player currentPlayer) {
+	public TronMap.Direction move(TronMap map, TronMap.PlayerType currentPlayer) {
 		/*if (m_process == null) {
 			System.err.println("Process not created.");
 			return facingDir;
