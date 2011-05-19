@@ -20,7 +20,7 @@ public class TronController {
 		
 		// Create player instances.
 		if (type == GameType.AIVsAI) {
-			m_player1 = new AIPlayer(TronMap.Player.One);
+			m_player1 = new AIContestPlayer(TronMap.Player.One, AIContestPlayer.AIType.NATHAN);
 		} else {
 			m_player1 = new HumanPlayer(TronMap.Player.One);
 		}
@@ -28,7 +28,7 @@ public class TronController {
 		if (type == GameType.HumanVsHuman) {
 			m_player2 = new HumanPlayer(TronMap.Player.Two);
 		} else {
-			m_player2 = new AIContestPlayer(TronMap.Player.Two);
+			m_player2 = new AIPlayer(TronMap.Player.Two);
 		}
 		if (m_player2.isAIPlayer())
 			((AIPlayer)m_player2).setDebugMessage(true);

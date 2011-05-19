@@ -6,11 +6,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.Timer;
 
 import System.SystemConstant;
@@ -39,7 +41,7 @@ public class GUI extends JFrame{
 		
 		setContentPane(new DrawingPane());
 		super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		super.setJMenuBar(new MyMenuBar());
+		super.setJMenuBar(new MyMenuBar());
 		pack();
 //		super.setLocation(1024, 0);
 		setVisible(true);
@@ -92,15 +94,59 @@ public class GUI extends JFrame{
 		private static final long serialVersionUID = -8726348717810672069L;
 		public MyMenuBar(){
 			super();
+			/**
+			 * Game
+			 * 		-> Load Replay ...
+			 * 		-> ------
+			 * 		-> Save Replay ...
+			 * 		-> ------
+			 * 		-> [ ] Real-time Mode
+			 * 		-> ------
+			 * 		-> Restart
+			 * 		-> Step
+			 * 		-> Quit
+			 * Players
+			 * 		-> Player 1
+			 * 			-> [ ] Human
+			 * 			-> [ ] UCIAI
+			 * 			-> [ ] Google AI (a1k0n)
+			 * 			-> [ ] Google AI (Nathan)
+			 * 		-> Player 2
+			 * 			-> [ ] Human
+			 * 			-> [ ] UCIAI
+			 * 			-> [ ] Google AI (a1k0n)
+			 * 			-> [ ] Google AI (Nathan)
+			 */
+			
+			// Game.
 			JMenu menu = new JMenu("Game");
-			String[] itemInGame = {"Start","Stop","Step","Quit"};
-			for (int a=0;a<itemInGame.length;a++){
-				JMenuItem item = new JMenuItem(itemInGame[a]);
-				item.setActionCommand(itemInGame[a]);
-				item.addActionListener(this);
-				menu.add(item);
-			}
+			menu.add(createMenuItem("Load Replay ...", "load"));
+			menu.add(new JSeparator());
+			menu.add(createMenuItem("Save Replay ...", "save"));
+			menu.add(new JSeparator());
+			menu.add(createCheckboxMenuItem("Real-time Mode", "realtime"));
+			menu.add(new JSeparator());
+			menu.add(createMenuItem("Restart", "restart"));
+			menu.add(createMenuItem("Step", "step"));
+			menu.add(createMenuItem("Quit", "quit"));
 			add(menu);
+			
+			// Players.
+		}
+		
+		private JMenuItem createMenuItem(String name, String command) {
+			JMenuItem item = new JMenuItem(name);
+			item.setActionCommand(command);
+			item.addActionListener(this);
+			return item;
+		}
+
+		
+		private JCheckBoxMenuItem createCheckboxMenuItem(String name, String command) {
+			JCheckBoxMenuItem item = new JCheckBoxMenuItem(name);
+			item.setActionCommand(command);
+			item.addActionListener(this);
+			return item;
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

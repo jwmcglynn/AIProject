@@ -9,8 +9,18 @@ import java.io.*;
 public class AIContestPlayer extends AIPlayer {
 	Process m_process = null;
 	
-	public AIContestPlayer(Player currentPlayer) {
+	public enum AIType {
+		A1K0N
+		, NATHAN
+	};
+	
+	private AIType m_aiType;
+	
+	public AIContestPlayer(Player currentPlayer, AIType type) {
 		super(currentPlayer);
+		
+		m_aiType = type;
+		
 		/*try {
 			m_process = createExternalProcess();
 		} catch (IOException e) {
@@ -20,11 +30,17 @@ public class AIContestPlayer extends AIPlayer {
 	}
 	
 	protected Process createExternalProcess() throws IOException {
-		if (System.getProperty("os.name").startsWith("Windows")) {
-			return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_win.exe", "0"});
-		} else {
-			// Mac.
-			return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_mac", "0"});
+		switch (m_aiType) {
+			default:
+			case A1K0N:
+				if (System.getProperty("os.name").startsWith("Windows")) {
+					return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_win.exe", "0"});
+				} else {
+					// Mac.
+					return Runtime.getRuntime().exec(new String[] {"bots/a1k0n_mac", "0"});
+				}
+			case NATHAN:
+				return Runtime.getRuntime().exec(new String[] {"java", "-cp", "bin", "GoogleAI/Nathan/MyTronBot"});
 		}
 	}
 	
