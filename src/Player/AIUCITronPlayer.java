@@ -9,14 +9,9 @@ import System.SystemConstant;
 
 public class AIUCITronPlayer extends AIPlayer{
 
-	
+	private final int debugMove = 8;
 
 	Thread movThread = new Thread();
-
-	private class Distance{
-		int dis;
-		CellType fromWhom;
-	}
 
 	private int[][] selfGrid;
 	private int[][] oppGrid;
@@ -33,7 +28,6 @@ public class AIUCITronPlayer extends AIPlayer{
 	int move;
 	TronMap.PlayerType selfPlayer;
 	public final static TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
-	private boolean enableDebug;
 
 	public AIUCITronPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
@@ -46,69 +40,11 @@ public class AIUCITronPlayer extends AIPlayer{
 		// TODO to be implemented
 		movThread = new Thread();
 	}
-	private void calcGrid(Distance[][] grid){
-		//		resetCalcGrid(grid);
-		grid[self.x][self.y].fromWhom = selfTerritory;
-		grid[self.x][self.y].dis=0;
-		grid[opp.x][opp.y].fromWhom = oppTerritory;
-		grid[opp.x][opp.y].dis = 0;
-
-		for (int b=1;b<height-1;b++){
-			for (int a=1;a<width-1;a++){
-				if (map.grid[a][b].wall) continue;
-				int newDis;
-				CellType newType;
-				if (grid[a-1][b].dis<grid[a][b-1].dis){
-					newDis = grid[a-1][b].dis;
-					newType = grid[a-1][b].fromWhom;
-				}
-				else{
-					newDis = grid[a][b-1].dis;
-					newType = grid[a][b-1].fromWhom;
-				}
-				if (newDis==Integer.MAX_VALUE)
-					continue;
-				if (grid[a][b].dis>newDis){
-					grid[a][b].dis = newDis+1;
-					grid[a][b].fromWhom=newType;
-				}
-			}
-		}
-		for(int b=height-2;b>0;b--){
-			for (int a=width-2;a>0;a--){
-				if (map.grid[a][b].wall) continue;
-				int newDis;
-				CellType newType;
-				if (grid[a+1][b].dis<grid[a][b+1].dis){
-					newDis = grid[a+1][b].dis;
-					newType = grid[a+1][b].fromWhom;
-				}
-				else{
-					newDis = grid[a][b+1].dis;
-					newType = grid[a][b+1].fromWhom;
-				}
-				if (newDis==Integer.MAX_VALUE)
-					continue;
-				if (grid[a][b].dis>newDis){
-					grid[a][b].dis = newDis+1;
-					grid[a][b].fromWhom=newType;
-				}
-			}
-		}
-	}
 	private void calcGrid(Point self,int dis,int[][] grid,boolean forceProcess){
-		if (forceProcess)
-			resetCalcGrid(grid);
 		if (self.x>=0 && self.x<width &&
 				self.y>=0 && self.y<height &&
 				dis<grid[self.x][self.y] &&
-				(forceProcess || 
-						(
-								map.grid[self.x][self.y] != CellType.Player1Moved &&
-								map.grid[self.x][self.y] != CellType.Player2Moved &&
-								map.grid[self.x][self.y] != CellType.Wall
-						)
-				))
+				(forceProcess || !map.isWall(self)))
 		{
 			grid[self.x][self.y] = dis;
 			calcGrid(new Point(self.x+1,self.y),dis+1,grid,false);
@@ -146,10 +82,27 @@ public class AIUCITronPlayer extends AIPlayer{
 				if (map.grid[a][b].id>=5)
 					map.grid[a][b] = CellType.Empty;
 	}
-	private int calcTerritoryMinimax(TronMap.Direction dir,Point self,int depth,int depthValue){
-		if (depth%2==0) throw new RuntimeException("");
-		if (depth==1) 
-			return depthValue + calcTerritory(dir,self);
+	private void printGrid(TronMap.CellType[][] grid){
+		for (int a=0;a<grid.length;a++){
+			for (int b=0;b<grid[a].length;b++){
+				if (grid[a][b].id==1)
+					System.out.print("1");
+				else if (grid[a][b].id==2)
+					System.out.print("2");
+				else if (grid[a][b].wall)
+					System.out.print("#");
+				else
+					System.out.print(" ");
+			}
+			System.out.println();
+		}
+	}
+	private int calcTerritoryMinimax(TronMap.Direction dir,Point self,Point opp,int depth,int depthValue){
+		if (depth%2==0) throw new RuntimeException("depth must be odd");
+		if (depth==1) {
+			Point selfNext = map.moveByDirection(self, dir);
+			return depthValue + calcTerritory(selfNext,opp,true);
+		}
 		else{
 			Point p = map.moveByDirection(self, dir);
 			CellType origin = map.grid[p.x][p.y];
@@ -158,48 +111,34 @@ public class AIUCITronPlayer extends AIPlayer{
 			map.grid[p.x][p.y] = selfType;
 
 
-			int[][] currentSelfGrid = new int[width][height];
-			int[][] currentOppGrid = new int[width][height];
 			Point oppPtr = null;
 			int maxSpace=Integer.MIN_VALUE;
 			TronMap.Direction debugOppDir=null;
 			for (TronMap.Direction d:dirs){
 				Point p2 = map.moveByDirection(opp, d);
-				CellType ct = map.grid[p2.x][p2.y];
-				map.grid[p2.x][p2.y] = oppType;
-				calcGrid(p,0,currentSelfGrid,true);
-				calcGrid(p2,0,currentOppGrid,true);
-				int space=0;
-				for (int a=0;a<width;a++){
-					for (int b=0;b<height;b++){
-						if (map.grid[a][b].id==0 ||
-								map.grid[a][b].id>=5){
-							if (currentSelfGrid[a][b]<currentOppGrid[a][b])
-								space--;
-							else if (currentSelfGrid[a][b]>currentOppGrid[a][b])
-								space++;
-						}
-					}
-				}
+				int space = -calcTerritory(self,p2,false);
 				if (maxSpace<space){
 					maxSpace=space;
 					oppPtr = p2;
 					debugOppDir = d;
 				}
-				map.grid[p2.x][p2.y] = ct;
 			}
-			//			System.out.println(debugOppDir);
+			if (oppPtr == null){
+				map.grid[p.x][p.y] = origin;
+				return Integer.MAX_VALUE - depthValue;
+			}
+//			System.out.println(debugOppDir);
 			CellType origin2 = map.grid[oppPtr.x][oppPtr.y];
 			map.grid[oppPtr.x][oppPtr.y] = oppType;
 
 			int value =  Integer.MIN_VALUE;
 			if (oppPtr.equals(p)){
-				value = -(int)((double)width*height/SystemConstant.drawAvoidConst);
+				return 0;
+//				value = -(int)((double)width*height/SystemConstant.drawAvoidConst);
 			}
 			else{
-
 				for (TronMap.Direction d: dirs){
-					int v = calcTerritoryMinimax(d,p,depth-2,depthValue*depth);
+					int v = calcTerritoryMinimax(d,p,oppPtr,depth-2,depthValue*depth);
 					if (value<v)
 						value=v;
 				}
@@ -213,6 +152,36 @@ public class AIUCITronPlayer extends AIPlayer{
 			return value;
 		}
 	}
+	//
+	private int calcTerritory(Point s,Point o,boolean isCalcSelf){
+		int space = 0;
+		Point p;
+		if (isCalcSelf){
+			p = s;
+		}
+		else{
+			p = o;
+		}
+		if  (map.isWall(p))
+			return Integer.MIN_VALUE;
+		resetCalcGrid(selfGrid);
+		resetCalcGrid(oppGrid);
+		calcGrid(s,0,selfGrid,!isCalcSelf);
+		calcGrid(o,0,oppGrid,isCalcSelf);
+		for (int a=0;a<width;a++){
+			for (int b=0;b<height;b++){
+				if (map.grid[a][b].id==0 ||
+						map.grid[a][b].id>=5){
+					if (selfGrid[a][b]<oppGrid[a][b])
+						space++;
+					else if (selfGrid[a][b]>oppGrid[a][b])
+						space--;
+				}
+			}
+		}
+		return space;
+	}
+	/*
 	private int calcTerritory(TronMap.Direction dir,Point self){
 		int space=0;
 		Point p = map.moveByDirection(self, dir);
@@ -221,7 +190,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		CellType preType = map.grid[p.x][p.y];
 		map.grid[p.x][p.y] = selfType;
 		calcGrid(p,0,selfGrid,true);
-		calcGrid(opp,0,oppGrid,true);
+		calcGrid(opp,-1,oppGrid,true);
 
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
@@ -238,6 +207,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		return space;
 	}
 
+	*/
 
 	public void keyPressed(int keyCode) {
 		if (keyCode == SystemConstant.KEY_TO_TERMINATE_AI){
@@ -247,6 +217,8 @@ public class AIUCITronPlayer extends AIPlayer{
 	
 
 	private void updateTerritoryGUI(){
+		calcGrid(self,0,selfGrid,true);
+		calcGrid(opp,0,oppGrid,true);
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
 				if (map.grid[a][b].id==0 ||
@@ -270,22 +242,20 @@ public class AIUCITronPlayer extends AIPlayer{
 		setUp();
 		self = map.position(currentPlayer);
 		opp = map.enemyPosition(currentPlayer);
-		// simple AI
-		//*
 		clearDebugGUI();
 		int space = Integer.MIN_VALUE;
-		//		TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
 		TronMap.Direction dir = null;
-		System.out.println(move);
-//		if (move==66)
+//		System.out.println(move);
+//		if (move==debugMove)
 //			System.out.println("Dead move");
-		for (int a=0;a<dirs.length;a++){
+		for (TronMap.Direction d:dirs){
 			//			int newSpace = calcTerritory(dirs[a],self);
-			int newSpace = calcTerritoryMinimax(dirs[a],self,11,1);
-			System.out.println(dirs[a] + " : " + newSpace);
+			int newSpace = calcTerritoryMinimax(d,self,opp,11,1); // max 11.
+//			if (super.enableDebug)
+//				System.out.println(d + " : " + newSpace);
 			if (space<newSpace){
 				space=newSpace;
-				dir = dirs[a];
+				dir = d;
 			}
 		}
 		if (dir==null){
@@ -296,7 +266,8 @@ public class AIUCITronPlayer extends AIPlayer{
 
 
 		// GUI update
-		updateGUI();
+		if (super.enableDebug)
+			updateTerritoryGUI();
 
 		move++;
 		// TODO
