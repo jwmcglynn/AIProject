@@ -133,5 +133,20 @@ public class TronMap {
 		return null;
 	}
 	
+	public TronMap clone() {
+		TronMap ret = new TronMap(width(), height());
+		
+		for (int i = 0; i < width(); ++i) {
+			for (int j = 0; j < height(); ++j) {
+				ret.grid[i][j] = grid[i][j];
+			}
+		}
+		
+		ret.player1 = (Point) player1.clone();
+		ret.player2 = (Point) player2.clone();
+		
+		return ret;
+	}
+	
 	// TDOO: More helper methods.
 }
