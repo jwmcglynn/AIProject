@@ -12,7 +12,8 @@ public class SystemConstant {
 	public final static int sizeOfSideY = (int)(sizeOfFrame.height*0.1);
 	public final static Color[] gridColor = {Color.BLACK, Color.WHITE, Color.RED, Color.BLUE,
 		new Color(150,0,0), new Color(0,0,150),
-		new Color(200,100,100), new Color(100,100,200),Color.WHITE};
+		new Color(200,100,100), new Color(100,100,200),Color.WHITE,
+		new Color(255,200,200), new Color(200,200,255)};
 	public final static int KEY_TO_TERMINATE_AI = KeyEvent.VK_P;
-	public final static double drawAvoidConst = 0.05;
+	public final static double drawAvoidConst = 0.00;
 }

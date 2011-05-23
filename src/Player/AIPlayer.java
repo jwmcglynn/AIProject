@@ -13,7 +13,7 @@ public abstract class AIPlayer extends Player {
 
 
 	
-	private boolean enableDebug;
+	protected boolean enableDebug;
 	private boolean fail;
 	
 	protected AIPlayer(PlayerType currentPlayer) {

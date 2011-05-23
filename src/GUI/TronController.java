@@ -63,7 +63,7 @@ public class TronController {
 		long startTime = System.nanoTime();
 		TronMap.Direction dir1 = m_player1.move(map, TronMap.PlayerType.One);
 		long endTime = System.nanoTime();
-		System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
+//		System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
 		// Update player1 position.
 		map.grid[map.player1.x][map.player1.y] = TronMap.CellType.Player1Moved;
@@ -78,7 +78,7 @@ public class TronController {
 			startTime = System.nanoTime();
 			TronMap.Direction dir2 = m_player2.move(map, TronMap.PlayerType.Two);
 			endTime = System.nanoTime();
-			System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
+//			System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 			
 			map.grid[map.player2.x][map.player2.y] = TronMap.CellType.Player2Moved;
 			map.player2 = map.moveByDirection(map.player2, dir2);

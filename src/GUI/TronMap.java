@@ -29,7 +29,9 @@ public class TronMap {
 		, Player2Moved(4, true)
 		, Debug_Player1_Territory(5, false)
 		, Debug_Player2_Territory(6, false)
-		, Debug_None_Territory(7, false);
+		, Debug_None_Territory(7, false)
+		, Debug_Expected_Player1_Move(8,false)
+		, Debug_Expected_Player2_move(9,false);
 		
 		public final int id;
 		public final boolean wall;
