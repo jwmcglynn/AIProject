@@ -4,8 +4,8 @@ import java.io.File;
 
 public class StartUp {
 	public static String[] maps = null;
-	// AI fail at 10,11,21,24,26
-	private static int a=26;
+	// AI fail at 1,9(too slow)
+	private static int a=11;
 	public static void main(String[] args){
 		if (maps==null){
 			File[] files = new File("maps/").listFiles();
