@@ -46,6 +46,11 @@ public class TronController {
 		}
 	}
 	
+	public void reinitializePlayers() {
+		m_player1.reinitialize();
+		m_player2.reinitialize();
+	}
+	
 	public void update() {
 		if (m_gameOver) return;
 		

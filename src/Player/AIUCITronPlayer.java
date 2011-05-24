@@ -53,6 +53,12 @@ public class AIUCITronPlayer extends AIPlayer{
 		// TODO to be implemented
 		movThread = new Thread();
 	}
+	
+	@Override
+	public void reinitialize() {
+		isEndGameMode = false;
+	}
+	
 	private void calcGrid(Point self,int dis,int[][] grid,boolean forceProcess){
 		if (self.x>=0 && self.x<width &&
 				self.y>=0 && self.y<height &&

@@ -31,6 +31,11 @@ public abstract class Player {
 	public boolean isAIPlayer(){
 		return false;
 	}
+
+	public void reinitialize() {
+		
+	}
+	
 	public void keyPressed(int keyCode) {
 		// For override later.
 	}

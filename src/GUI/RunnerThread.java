@@ -19,7 +19,7 @@ public class RunnerThread extends Thread {
 			if (m_gui.controller.m_gameOver) return;
 			
 			// Delay until next move.
-			long timeTaken = (endTime - startTime) / 1000;
+			long timeTaken = (endTime - startTime) / 1000000;
 			if (timeTaken < m_frameDelay) {
 				try {
 					sleep(m_frameDelay - timeTaken);
