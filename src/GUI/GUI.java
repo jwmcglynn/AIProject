@@ -69,8 +69,8 @@ public class GUI extends JFrame{
 		
 		menu.setDebug(true);
 		menu.setRealtime(false);
-		menu.setPlayer1(PlayerBackend.Human);
-		menu.setPlayer2(PlayerBackend.UCITron);
+		menu.setPlayer1(PlayerBackend.UCITron);
+		menu.setPlayer2(PlayerBackend.AINathan);
 	}
 	
 	private void setMode(Mode mode) {
@@ -95,16 +95,21 @@ public class GUI extends JFrame{
 	}
 	
 	private void menuRealtimeChanged(boolean realtime) {
-		if (thread == null || realtime != m_realtime) {
-			if (realtime) {
-				// Start thread.
-				thread = new RunnerThread(this);
-				thread.start();
-			} else {
-				// End thread.
-				if (thread != null) thread.m_abort = true;
-				thread = null;
+		if (thread != null) {
+			thread.m_abort = true;
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
+			
+			thread = null;
+		}
+		
+		if (realtime) {
+			// Start thread.
+			thread = new RunnerThread(this);
+			thread.start();
 		}
 		
 		m_realtime = realtime;
@@ -149,7 +154,10 @@ public class GUI extends JFrame{
 	/*************************************************************************/
 	
 	private void loadMap(String filename) {
+		boolean realtime = m_realtime;
+		menuRealtimeChanged(false);
 		controller.loadMap(new TronMap(filename));
+		menuRealtimeChanged(realtime);
 	}
 	
 	private class DrawingPane extends JPanel {
@@ -442,12 +450,16 @@ public class GUI extends JFrame{
 			} else if (command.equals("debug")) {
 				setDebug(m_debug.getState());
 			} else if (command.equals("restart")) {
+				menuRealtimeChanged(false);
 				controller.restart();
+				menuRealtimeChanged(m_realtime.getState());
 				needsRedraw();
 			} else if (command.equals("step")) {
 				menuStep();
 			} else if (command.equals("undo")) {
+				menuRealtimeChanged(false);
 				controller.undo();
+				menuRealtimeChanged(m_realtime.getState());
 				needsRedraw();
 			} else if (command.equals("quit")) {
 				System.exit(0);
