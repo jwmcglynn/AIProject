@@ -36,7 +36,7 @@ public class AIUCITronPlayer extends AIPlayer{
 	TronMap map;
 	int move;
 	TronMap.PlayerType selfPlayer;
-	public final static TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
+	public final static TronMap.Direction[] dirs = {TronMap.Direction.North, TronMap.Direction.South,TronMap.Direction.East, TronMap.Direction.West};
 
 	public AIUCITronPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
@@ -126,7 +126,7 @@ public class AIUCITronPlayer extends AIPlayer{
 			Point p = map.moveByDirection(self, dir);
 			CellType origin = map.grid[p.x][p.y];
 			if (map.isWall(p))
-				return Integer.MIN_VALUE;
+				return Integer.MIN_VALUE + depthValue;
 			map.grid[p.x][p.y] = selfType;
 			ArrayList<Point> oppPtrs = new ArrayList<Point>();
 			//			Point oppPtr = null;
