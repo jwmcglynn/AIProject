@@ -36,7 +36,7 @@ public class AIUCITronPlayer extends AIPlayer{
 	TronMap map;
 	int move;
 	TronMap.PlayerType selfPlayer;
-	public final static TronMap.Direction[] dirs = {TronMap.Direction.North, TronMap.Direction.South,TronMap.Direction.East, TronMap.Direction.West};
+	public final static TronMap.Direction[] dirs = {TronMap.Direction.North, TronMap.Direction.East,TronMap.Direction.South, TronMap.Direction.West};
 
 	public AIUCITronPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
@@ -223,7 +223,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
 				if (map.grid[a][b].id==0 ||
-						(map.grid[a][b].id>=5 && map.grid[a][b].id<=7)){
+						(map.grid[a][b].id>=5)){
 					if (selfGrid[a][b]<oppGrid[a][b])
 						map.grid[a][b] = selfTerritory;
 					else if (selfGrid[a][b]>oppGrid[a][b])
@@ -278,7 +278,7 @@ public class AIUCITronPlayer extends AIPlayer{
 			testEndGame(list,new Point(self.x,self.y-1),opp);
 		}
 		if (isEndGameMode)
-			System.out.println("StartEndGameMode");
+			System.out.println("In EndGameMode:");
 		for (TronMap.Direction d:dirs){
 			//			int newSpace = calcTerritory(dirs[a],self);
 			int newSpace;
@@ -303,7 +303,7 @@ public class AIUCITronPlayer extends AIPlayer{
 
 		// GUI update{
 		if (super.enableDebug){
-			//			clearDebugGUI();
+			clearDebugGUI();
 			updateTerritoryGUI();
 		}
 
