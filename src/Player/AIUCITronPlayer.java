@@ -126,7 +126,7 @@ public class AIUCITronPlayer extends AIPlayer{
 			Point p = map.moveByDirection(self, dir);
 			CellType origin = map.grid[p.x][p.y];
 			if (map.isWall(p))
-				return Integer.MIN_VALUE;
+				return Integer.MIN_VALUE + depthValue;
 			map.grid[p.x][p.y] = selfType;
 			ArrayList<Point> oppPtrs = new ArrayList<Point>();
 			//			Point oppPtr = null;
@@ -217,7 +217,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
 				if (map.grid[a][b].id==0 ||
-						(map.grid[a][b].id>=5 && map.grid[a][b].id<=7)){
+						(map.grid[a][b].id>=5)){
 					if (selfGrid[a][b]<oppGrid[a][b])
 						map.grid[a][b] = selfTerritory;
 					else if (selfGrid[a][b]>oppGrid[a][b])
@@ -272,7 +272,7 @@ public class AIUCITronPlayer extends AIPlayer{
 			testEndGame(list,new Point(self.x,self.y-1),opp);
 		}
 		if (isEndGameMode)
-			System.out.println("StartEndGameMode");
+			System.out.println("In EndGameMode:");
 		for (TronMap.Direction d:dirs){
 			//			int newSpace = calcTerritory(dirs[a],self);
 			int newSpace;
@@ -297,7 +297,7 @@ public class AIUCITronPlayer extends AIPlayer{
 
 		// GUI update{
 		if (super.enableDebug){
-			//			clearDebugGUI();
+			clearDebugGUI();
 			updateTerritoryGUI();
 		}
 
