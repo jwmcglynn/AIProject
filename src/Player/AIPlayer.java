@@ -1,18 +1,7 @@
 package Player;
-
-import java.awt.Point;
-import System.SystemConstant;
-
-import GUI.TronMap;
-import GUI.TronMap.CellType;
 import GUI.TronMap.PlayerType;
 
 public abstract class AIPlayer extends Player {
-
-
-
-
-	
 	protected boolean enableDebug;
 	private boolean fail;
 	

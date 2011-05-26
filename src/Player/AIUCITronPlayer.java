@@ -35,11 +35,11 @@ public class AIUCITronPlayer extends AIPlayer{
 	private CellType oppTerritory;
 	TronMap map;
 	int move;
-	TronMap.PlayerType selfPlayer;
 	public final static TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
 
 	public AIUCITronPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
+		
 		expectedOppMove = new LinkedList<Point>();
 		expectedSelfMove = new LinkedList<Point>();
 
@@ -81,7 +81,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		if (selfGrid==null){
 			selfGrid = new int[width=map.width()][height=map.height()];
 			oppGrid = new int[width][height];
-			if (selfPlayer == TronMap.PlayerType.One){
+			if (playerId == TronMap.PlayerType.One){
 				selfType = CellType.Player1;
 				selfTerritory = CellType.Debug_Player1_Territory;
 				oppType = CellType.Player2;
@@ -206,12 +206,6 @@ public class AIUCITronPlayer extends AIPlayer{
 		}
 		return space;
 	}
-	public void keyPressed(int keyCode) {
-		if (keyCode == SystemConstant.KEY_TO_TERMINATE_AI){
-			// TODO
-		}
-	}
-
 
 	private void updateTerritoryGUI(){
 		//*
@@ -253,12 +247,12 @@ public class AIUCITronPlayer extends AIPlayer{
 	}
 
 
-	public TronMap.Direction move(TronMap map, TronMap.PlayerType currentPlayer) {
+	@Override
+	public TronMap.Direction move(TronMap map) {
 		this.map = map;
-		selfPlayer = currentPlayer;
 		setUp();
-		self = map.position(currentPlayer);
-		opp = map.enemyPosition(currentPlayer);
+		self = map.position(playerId);
+		opp = map.enemyPosition(playerId);
 		int space = Integer.MIN_VALUE;
 		TronMap.Direction dir = null;
 		

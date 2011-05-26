@@ -1,9 +1,12 @@
 package GUI;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.KeyEventPostProcessor;
+import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -13,6 +16,7 @@ import javax.swing.*;
 import javax.swing.filechooser.*;
 
 import Player.AIContestPlayer;
+import Player.AIJeffTronPlayer;
 import Player.AIUCITronPlayer;
 import Player.HumanPlayer;
 import Player.Player;
@@ -41,7 +45,8 @@ public class GUI extends JFrame{
 
 	public enum PlayerBackend {
 		Human
-		, UCITron
+		, UCITronKen
+		, UCITronJeff
 		, AIA1k0n
 		, AINathan
 	}
@@ -66,11 +71,11 @@ public class GUI extends JFrame{
 		pack();
 		setVisible(true);
 		
-		addKeyListener(new GameInput());
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventPostProcessor(new GameInput());
 		
 		menu.setDebug(true);
 		menu.setRealtime(false);
-		menu.setPlayer1(PlayerBackend.UCITron);
+		menu.setPlayer1(PlayerBackend.UCITronJeff);
 		menu.setPlayer2(PlayerBackend.AINathan);
 	}
 	
@@ -147,8 +152,10 @@ public class GUI extends JFrame{
 			default:
 			case Human:
 				return new HumanPlayer(number);
-			case UCITron:
+			case UCITronKen:
 				return new AIUCITronPlayer(number);
+			case UCITronJeff:
+				return new AIJeffTronPlayer(number);
 			case AIA1k0n:
 				return new AIContestPlayer(number, AIContestPlayer.AIType.A1K0N);
 			case AINathan:
@@ -174,6 +181,15 @@ public class GUI extends JFrame{
 		@Override
 		public void paint(Graphics g) {
 			TronMap map = controller.getMap();
+			if (map == null) return;
+
+			// Fill background.
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, getWidth(), getHeight());
+			
+			controller.m_player1.drawDebugData(this, g);
+			controller.m_player2.drawDebugData(this, g);
+			
 			final int padding = 10;
 			
 			int size = Math.min(
@@ -186,6 +202,8 @@ public class GUI extends JFrame{
 			
 			for (int a=0;a<map.grid.length;a++){
 				for (int b=0;b<map.grid[a].length;b++){
+					if (map.grid[a][b] == TronMap.CellType.Empty) continue;
+					
 					g.setColor(SystemConstant.gridColor[map.grid[a][b].id+1]);
 					g.fillRect(
 						offsetX + a * size, 
@@ -357,12 +375,14 @@ public class GUI extends JFrame{
 		private JCheckBoxMenuItem m_debug;
 		
 		private JRadioButtonMenuItem m_player1Human;
-		private JRadioButtonMenuItem m_player1UCI;
+		private JRadioButtonMenuItem m_player1UCIKen;
+		private JRadioButtonMenuItem m_player1UCIJeff;
 		private JRadioButtonMenuItem m_player1AI1;
 		private JRadioButtonMenuItem m_player1AI2;
 
 		private JRadioButtonMenuItem m_player2Human;
-		private JRadioButtonMenuItem m_player2UCI;
+		private JRadioButtonMenuItem m_player2UCIKen;
+		private JRadioButtonMenuItem m_player2UCIJeff;
 		private JRadioButtonMenuItem m_player2AI1;
 		private JRadioButtonMenuItem m_player2AI2;
 		
@@ -415,7 +435,8 @@ public class GUI extends JFrame{
 			players.add(createMenuItem("Player 1 (Red)", ""));
 			ButtonGroup player1 = new ButtonGroup();
 			players.add(m_player1Human = createRadioMenuItem("Human (WASD)", "1human", player1));
-			players.add(m_player1UCI = createRadioMenuItem("UCITron", "1uci", player1));
+			players.add(m_player1UCIKen = createRadioMenuItem("UCITron", "1uci", player1));
+			players.add(m_player1UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "1ucijeff", player1));
 			players.add(m_player1AI1 = createRadioMenuItem("Google AI (a1k0n)", "1a1k0n", player1));
 			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1nathan", player1));
 			
@@ -423,7 +444,8 @@ public class GUI extends JFrame{
 			players.add(createMenuItem("Player 2 (Blue)", ""));
 			ButtonGroup player2 = new ButtonGroup();
 			players.add(m_player2Human = createRadioMenuItem("Human (Arrow Keys)", "2human", player2));
-			players.add(m_player2UCI = createRadioMenuItem("UCITron", "2uci", player2));
+			players.add(m_player2UCIKen = createRadioMenuItem("UCITron", "2uci", player2));
+			players.add(m_player2UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "2ucijeff", player2));
 			players.add(m_player2AI1 = createRadioMenuItem("Google AI (a1k0n)", "2a1k0n", player2));
 			players.add(m_player2AI2 = createRadioMenuItem("Google AI (Nathan)", "2nathan", player2));
 			add(players);
@@ -476,7 +498,9 @@ public class GUI extends JFrame{
 			else if (command.equals("1human")) {
 				menuPlayer1Changed(PlayerBackend.Human);
 			} else if (command.equals("1uci")) {
-				menuPlayer1Changed(PlayerBackend.UCITron);
+				menuPlayer1Changed(PlayerBackend.UCITronKen);
+			} else if (command.equals("1ucijeff")) {
+				menuPlayer1Changed(PlayerBackend.UCITronJeff);
 			} else if (command.equals("1a1k0n")) {
 				menuPlayer1Changed(PlayerBackend.AIA1k0n);
 			} else if (command.equals("1nathan")) {
@@ -485,7 +509,9 @@ public class GUI extends JFrame{
 			} else if (command.equals("2human")) {
 				menuPlayer2Changed(PlayerBackend.Human);
 			} else if (command.equals("2uci")) {
-				menuPlayer2Changed(PlayerBackend.UCITron);
+				menuPlayer2Changed(PlayerBackend.UCITronKen);
+			} else if (command.equals("2ucijeff")) {
+				menuPlayer2Changed(PlayerBackend.UCITronJeff);
 			} else if (command.equals("2a1k0n")) {
 				menuPlayer2Changed(PlayerBackend.AIA1k0n);
 			} else if (command.equals("2nathan")) {
@@ -510,8 +536,11 @@ public class GUI extends JFrame{
 				case Human:
 					m_player1Human.setSelected(true);
 					break;
-				case UCITron:
-					m_player1UCI.setSelected(true);
+				case UCITronKen:
+					m_player1UCIKen.setSelected(true);
+					break;
+				case UCITronJeff:
+					m_player1UCIJeff.setSelected(true);
 					break;
 				case AIA1k0n:
 					m_player1AI1.setSelected(true);
@@ -529,8 +558,11 @@ public class GUI extends JFrame{
 				case Human:
 					m_player2Human.setSelected(true);
 					break;
-				case UCITron:
-					m_player2UCI.setSelected(true);
+				case UCITronKen:
+					m_player2UCIKen.setSelected(true);
+					break;
+				case UCITronJeff:
+					m_player2UCIJeff.setSelected(true);
 					break;
 				case AIA1k0n:
 					m_player2AI1.setSelected(true);
@@ -544,17 +576,15 @@ public class GUI extends JFrame{
 		}
 	}
 	
-	private class GameInput implements KeyListener {
-		public void keyTyped(KeyEvent e) {
-			// Ignore.
+	private class GameInput implements KeyEventPostProcessor {
+		@Override
+		public boolean postProcessKeyEvent(KeyEvent e) {
+			if (e.getID() == KeyEvent.KEY_PRESSED && controller.keyPressed(e.getKeyCode())) {
+				menuStep();
+				return true;
+			}
+			
+			return false;
 		}
-		
-        public void keyReleased(KeyEvent e) {
-        	controller.keyReleased(e.getKeyCode());
-        }
-        
-        public void keyPressed(KeyEvent e) {
-             controller.keyPressed(e.getKeyCode());
-        }
 	}
 }

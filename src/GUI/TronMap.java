@@ -118,6 +118,16 @@ public class TronMap {
 		if (p == PlayerType.One) return player2;
 		else return player1;
 	}
+
+	public void setPosition(PlayerType p, Point point) {
+		if (p == PlayerType.One) player1 = point;
+		else player2 = point;
+	}
+	
+	public void setEnemyPosition(PlayerType p, Point point) {
+		if (p == PlayerType.One) player2 = point;
+		else player1 = point;
+	}
 	
 	public Point moveByDirection(Point pos, Direction dir) {
 		switch (dir) {
@@ -133,6 +143,14 @@ public class TronMap {
 		
 		// Never occurs.
 		return null;
+	}
+	
+	public void setCell(Point pos, CellType type) {
+		grid[pos.x][pos.y] = type;
+	}
+	
+	public CellType getCell(Point pos) {
+		return grid[pos.x][pos.y];
 	}
 	
 	public TronMap clone() {

@@ -44,7 +44,7 @@ public class AIContestPlayer extends AIPlayer {
 		}
 	}
 	
-	public TronMap.Direction move(TronMap map, TronMap.PlayerType currentPlayer) {
+	public TronMap.Direction move(TronMap map) {
 		/*if (m_process == null) {
 			System.err.println("Process not created.");
 			return facingDir;
