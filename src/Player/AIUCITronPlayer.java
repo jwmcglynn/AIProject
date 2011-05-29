@@ -1,18 +1,22 @@
 package Player;
 
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Stack;
+
+import javax.swing.Timer;
 
 import GUI.TronMap;
 import GUI.TronMap.CellType;
+import GUI.TronMap.Direction;
 import GUI.TronMap.PlayerType;
 import System.SystemConstant;
 
 public class AIUCITronPlayer extends AIPlayer{
+	//* To be discard.
 
 	private final int debugMove = 20;
 	private boolean isEndGameMode;
@@ -21,7 +25,7 @@ public class AIUCITronPlayer extends AIPlayer{
 
 	private int[][] selfGrid;
 	private int[][] oppGrid;
-	
+
 	private LinkedList<Point> expectedOppMove;
 	private LinkedList<Point> expectedSelfMove;
 
@@ -39,7 +43,7 @@ public class AIUCITronPlayer extends AIPlayer{
 
 	public AIUCITronPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
-		
+
 		expectedOppMove = new LinkedList<Point>();
 		expectedSelfMove = new LinkedList<Point>();
 
@@ -53,12 +57,12 @@ public class AIUCITronPlayer extends AIPlayer{
 		// TODO to be implemented
 		movThread = new Thread();
 	}
-	
+
 	@Override
 	public void reinitialize() {
 		isEndGameMode = false;
 	}
-	
+
 	private void calcGrid(Point self,int dis,int[][] grid,boolean forceProcess){
 		if (self.x>=0 && self.x<width &&
 				self.y>=0 && self.y<height &&
@@ -143,7 +147,7 @@ public class AIUCITronPlayer extends AIPlayer{
 				for (TronMap.Direction d:dirs){
 					Point p2 = map.moveByDirection(opp, d);
 					int space = -calcTerritory(self,p2,false);
-	
+
 					if (maxSpace<space){
 						oppPtrs.clear();
 						maxSpace=space;
@@ -167,12 +171,12 @@ public class AIUCITronPlayer extends AIPlayer{
 							value=v;
 						}
 					}
-	
-	
+
+
 					map.grid[oppPtr.x][oppPtr.y] = origin2;
-	
+
 				}
-	
+
 			}
 			map.grid[p.x][p.y] = origin;
 			return value;
@@ -208,12 +212,10 @@ public class AIUCITronPlayer extends AIPlayer{
 	}
 
 	private void updateTerritoryGUI(){
-		//*
 		resetCalcGrid(selfGrid);
 		resetCalcGrid(oppGrid);
 		calcGrid(self,0,selfGrid,true);
 		calcGrid(opp,1,oppGrid,true);
-		 //*/
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
 				if (map.grid[a][b].id==0 ||
@@ -255,14 +257,14 @@ public class AIUCITronPlayer extends AIPlayer{
 		opp = map.enemyPosition(playerId);
 		int space = Integer.MIN_VALUE;
 		TronMap.Direction dir = null;
-		
+
 		if (super.enableDebug){
 			System.out.println(move);
 			if (move==debugMove)
 				System.out.println("Dead move");
 		}
 
-		
+
 		if (!isEndGameMode){
 			isEndGameMode = true;
 			ArrayList<Point> list = new ArrayList<Point>(width*height);
@@ -280,7 +282,7 @@ public class AIUCITronPlayer extends AIPlayer{
 				newSpace = calcTerritoryMinimax(d,self,opp,11,1);
 			else
 				newSpace = calcTerritoryMinimax(d,self,opp,5,1);
-				
+
 //			if (super.enableDebug)
 //				System.out.println(d + " : " + newSpace);
 			if (space<newSpace){
@@ -292,7 +294,6 @@ public class AIUCITronPlayer extends AIPlayer{
 			System.out.println("No where to move...");
 			dir = TronMap.Direction.North;
 		}
-		//*/
 
 
 		// GUI update{
@@ -305,4 +306,5 @@ public class AIUCITronPlayer extends AIPlayer{
 		// TODO
 		return super.move(dir);
 	}	
+	 //*/
 }

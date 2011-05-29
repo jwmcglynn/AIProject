@@ -12,14 +12,6 @@ public abstract class AIPlayer extends Player {
 	}
 
 	protected void updateGUI(){
-		/*
-		if (enableDebug){
-			calcGrid(this.self,0,selfGrid,true);
-			calcGrid(this.opp,0,oppGrid,true);
-			updateTerritoryGUI();
-		}
-		*/
-		//TODO
 	}
 	
 	public void setDebugMessage(boolean enable){

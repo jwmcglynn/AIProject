@@ -17,6 +17,7 @@ import javax.swing.filechooser.*;
 
 import Player.AIContestPlayer;
 import Player.AIJeffTronPlayer;
+import Player.AITimedPlayer;
 import Player.AIUCITronPlayer;
 import Player.HumanPlayer;
 import Player.Player;
@@ -49,6 +50,7 @@ public class GUI extends JFrame{
 		, UCITronJeff
 		, AIA1k0n
 		, AINathan
+		, AITimed
 	}
 	
 	public GUI(String filename) {
@@ -75,8 +77,8 @@ public class GUI extends JFrame{
 		
 		menu.setDebug(true);
 		menu.setRealtime(false);
-		menu.setPlayer1(PlayerBackend.UCITronJeff);
-		menu.setPlayer2(PlayerBackend.AINathan);
+		menu.setPlayer1(PlayerBackend.AITimed);
+		menu.setPlayer2(PlayerBackend.UCITronJeff);
 	}
 	
 	private void setMode(Mode mode) {
@@ -160,6 +162,8 @@ public class GUI extends JFrame{
 				return new AIContestPlayer(number, AIContestPlayer.AIType.A1K0N);
 			case AINathan:
 				return new AIContestPlayer(number, AIContestPlayer.AIType.NATHAN);
+			case  AITimed:
+				return new AITimedPlayer(number);
 		}
 	}
 	
