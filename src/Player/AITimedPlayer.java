@@ -15,6 +15,8 @@ import System.SystemConstant;
 
 public class AITimedPlayer extends AIPlayer{
 
+	
+	private final static int MAX_DEPTH = 300;
 
 	private CellType selfType;
 	private CellType oppType;
@@ -22,12 +24,12 @@ public class AITimedPlayer extends AIPlayer{
 	private CellType oppTerritory;
 	private Point self;
 	private Point opp;
-	
+
 	private final static TronMap.Direction[] dirs = 
-		{TronMap.Direction.North,
-		 TronMap.Direction.East, 
-		 TronMap.Direction.South, 
-		 TronMap.Direction.West};
+	{TronMap.Direction.North,
+		TronMap.Direction.East, 
+		TronMap.Direction.South, 
+		TronMap.Direction.West};
 
 	MoveStack moves;
 	private Stack<State> maps;
@@ -38,8 +40,39 @@ public class AITimedPlayer extends AIPlayer{
 
 	private boolean timedOut;
 	Timer time;
-	
-	
+
+	private class SearchingTree{
+		public class Node{
+			public int alpha;
+			public int beta;
+			public Node from;
+			public Node[] next;
+			public Node(int a,int b){
+				alpha = a;
+				beta = b;
+				next = new Node[4];
+			}
+		}
+		private Node root;
+		private void pruning(){
+
+		}
+		public void addNode(TronMap.Direction[] dir,int alpha,int beta){
+			Node n = new Node(alpha,beta);
+			Node temp = root;
+			for (int a=0;a<dir.length;a++){
+				if (a==dir.length-1){
+					temp.next[dir[a].id] = n;
+					n.from = temp.next[dir[a].id];
+					pruning();
+				}
+				else
+					temp = temp.next[dir[a].id];
+			}
+
+		}
+
+	}
 	Direction dir;
 	private class State{
 		public final TronMap map;
@@ -53,16 +86,16 @@ public class AITimedPlayer extends AIPlayer{
 	}
 	public Point moveByDirection(Point pos, Direction dir) {
 		switch (dir) {
-			case North:
-				return new Point(pos.x, Math.max(pos.y - 1, 0));
-			case East:
-				return new Point(pos.x + 1, pos.y);
-			case South:
-				return new Point(pos.x, pos.y + 1);
-			case West:
-				return new Point(Math.max(pos.x - 1, 0), pos.y);
+		case North:
+			return new Point(pos.x, Math.max(pos.y - 1, 0));
+		case East:
+			return new Point(pos.x + 1, pos.y);
+		case South:
+			return new Point(pos.x, pos.y + 1);
+		case West:
+			return new Point(Math.max(pos.x - 1, 0), pos.y);
 		}
-		
+
 		// Never occurs.
 		return null;
 	}
@@ -84,7 +117,7 @@ public class AITimedPlayer extends AIPlayer{
 		private static final long serialVersionUID = -4946358323356244720L;
 		public Move push(Move m){
 			if (currentMap.isWall(m.to))
-				return null;
+				return super.push(null);
 			currentMap.setCell(m.to, m.who);
 			if (m.isSelf)
 				self = m.to;
@@ -94,6 +127,8 @@ public class AITimedPlayer extends AIPlayer{
 		}
 		public Move pop(){
 			final Move m  = super.pop();
+			if (m == null)
+				return null;
 			currentMap.setCell(m.to, m.original);
 			if (m.isSelf)
 				self = m.from;
@@ -168,6 +203,49 @@ public class AITimedPlayer extends AIPlayer{
 		}
 	}
 	int depth;
+	private void calcAB(int depth){
+		double value = Integer.MIN_VALUE;
+		for (TronMap.Direction dir2:dirs){
+			double space =calcAB(new Move(self,dir2),depth-1,Integer.MIN_VALUE,Integer.MAX_VALUE);
+			System.out.println(dir2+":"+space);
+			moves.pop();
+			if (value< space){
+				dir = dir2;
+				value = space;
+				
+			}
+		}
+	}
+	private double calcAB(Move move, int depth, double alpha, double beta){
+		if (moves.push(move)==null){
+			if (depth%2==0)
+				return Integer.MIN_VALUE+MAX_DEPTH-depth;
+			else
+				return Integer.MAX_VALUE-MAX_DEPTH+depth;
+		}
+		if (depth == 0)
+			return calcSpace(self,opp);
+		if (depth%2==1){
+			for (Direction dir2:dirs){
+				double space = calcAB(new Move(self,dir2),depth-1,alpha,beta);
+				alpha = Math.max(alpha, space);
+				moves.pop();
+				if (beta<=alpha)
+					break;
+			}
+			return alpha;
+		}
+		else{
+			for (Direction dir2:dirs){
+				double space = calcAB(new Move(opp,dir2),depth-1,alpha,beta);
+				beta = Math.min(beta, space);
+				moves.pop();
+				if (beta<=alpha)
+					break;
+			}
+			return beta;
+		}
+	}
 	private void calcAB(){
 		if (timedOut || maps.isEmpty())
 			return;
@@ -178,7 +256,7 @@ public class AITimedPlayer extends AIPlayer{
 		currentMap = s.map;
 		double alpha = s.alpha;
 		double beta = s.beta;
-		
+
 		for (Direction dir2: dirs){
 			if (moves.push(new Move(self,dir2))==null)
 				continue;
@@ -233,7 +311,7 @@ public class AITimedPlayer extends AIPlayer{
 	public Direction move(TronMap map) {
 		depth = 1;
 		moves = new MoveStack();
-		maps.push(new State(map.clone(),Integer.MIN_VALUE,Integer.MAX_VALUE));
+		maps.push(new State(currentMap = map.clone(),Integer.MIN_VALUE,Integer.MAX_VALUE));
 		width = map.width();
 		height = map.height();
 		timedOut = false;
@@ -241,7 +319,9 @@ public class AITimedPlayer extends AIPlayer{
 		opp = map.enemyPosition(playerId);
 		dir = TronMap.Direction.North;
 		time.start();
-		calcAB();
+//		calcAB();
+		calcAB(5);
+		
 		time.stop();
 		maps.clear();
 

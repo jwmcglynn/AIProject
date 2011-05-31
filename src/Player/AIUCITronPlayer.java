@@ -3,8 +3,8 @@ package Player;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.swing.Timer;
@@ -16,295 +16,334 @@ import GUI.TronMap.PlayerType;
 import System.SystemConstant;
 
 public class AIUCITronPlayer extends AIPlayer{
-	//* To be discard.
 
-	private final int debugMove = 20;
-	private boolean isEndGameMode;
 
-	Thread movThread = new Thread();
-
-	private int[][] selfGrid;
-	private int[][] oppGrid;
-
-	private LinkedList<Point> expectedOppMove;
-	private LinkedList<Point> expectedSelfMove;
-
-	private Point self;
-	private Point opp;
-	private int width, height;
+	private final static int MAX_DEPTH = 300;
 
 	private CellType selfType;
 	private CellType oppType;
 	private CellType selfTerritory;
 	private CellType oppTerritory;
-	TronMap map;
-	int move;
-	public final static TronMap.Direction[] dirs = {TronMap.Direction.North,TronMap.Direction.East, TronMap.Direction.South, TronMap.Direction.West};
+	private Point self;
+	private Point opp;
+
+	private final static TronMap.Direction[] dirs = 
+	{TronMap.Direction.North,
+		TronMap.Direction.East, 
+		TronMap.Direction.South, 
+		TronMap.Direction.West};
+
+	MoveStack moves;
+	private TronMap currentMap;
+
+	private int width;
+	private int height;
+
+	Direction dir;
+	public Point moveByDirection(Point pos, Direction dir) {
+		switch (dir) {
+		case North:
+			return new Point(pos.x, Math.max(pos.y - 1, 0));
+		case East:
+			return new Point(pos.x + 1, pos.y);
+		case South:
+			return new Point(pos.x, pos.y + 1);
+		case West:
+			return new Point(Math.max(pos.x - 1, 0), pos.y);
+		}
+
+		// Never occurs.
+		return null;
+	}
+	private class Move{
+		public final Point to;
+		public final CellType who;
+		public final Point from;
+		public final boolean isSelf;
+		public final CellType original;
+		public Move(Point f,TronMap.Direction dir){
+			from = f;
+			to = moveByDirection(f, dir);
+			original = currentMap.getCell(to);
+			this.isSelf = f.equals(self);
+			who = (isSelf)?selfType:oppType;
+		}
+	}
+	private class MoveStack extends Stack<Move>{
+		private static final long serialVersionUID = -4946358323356244720L;
+		public Move push(Move m){
+			if (currentMap.isWall(m.to))
+				return super.push(null);
+			currentMap.setCell(m.to, m.who);
+			if (m.isSelf)
+				self = m.to;
+			else
+				opp = m.to;
+			return super.push(m);
+		}
+		public Move pop(){
+			final Move m  = super.pop();
+			if (m == null)
+				return null;
+			currentMap.setCell(m.to, m.original);
+			if (m.isSelf)
+				self = m.from;
+			else
+				opp = m.from;
+			return m;
+		}
+	}
 
 	public AIUCITronPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
-
-		expectedOppMove = new LinkedList<Point>();
-		expectedSelfMove = new LinkedList<Point>();
-
-		enableDebug = false;
-		isEndGameMode = false;
-		move =0;
-		selfGrid = null;
-		oppGrid = null;
-		self = null;
-		opp = null;
-		// TODO to be implemented
-		movThread = new Thread();
-	}
-
-	@Override
-	public void reinitialize() {
-		isEndGameMode = false;
-	}
-
-	private void calcGrid(Point self,int dis,int[][] grid,boolean forceProcess){
-		if (self.x>=0 && self.x<width &&
-				self.y>=0 && self.y<height &&
-				dis<grid[self.x][self.y] &&
-				(forceProcess || !map.isWall(self)))
-		{
-			grid[self.x][self.y] = dis;
-			calcGrid(new Point(self.x+1,self.y),dis+1,grid,false);
-			calcGrid(new Point(self.x-1,self.y),dis+1,grid,false);
-			calcGrid(new Point(self.x,self.y+1),dis+1,grid,false);
-			calcGrid(new Point(self.x,self.y-1),dis+1,grid,false);
-		}
-	}
-	private void resetCalcGrid(int[][] grid){
-		for (int a=0;a<width;a++)
-			for (int b=0;b<height;b++)
-				grid[a][b]= Integer.MAX_VALUE;
-	}
-	private void setUp(){
-		if (selfGrid==null){
-			selfGrid = new int[width=map.width()][height=map.height()];
-			oppGrid = new int[width][height];
-			if (playerId == TronMap.PlayerType.One){
-				selfType = CellType.Player1;
-				selfTerritory = CellType.Debug_Player1_Territory;
-				oppType = CellType.Player2;
-				oppTerritory = CellType.Debug_Player2_Territory;
-			}
-			else{
-				selfType = CellType.Player2;
-				selfTerritory = CellType.Debug_Player2_Territory;
-				oppType = CellType.Player1;
-				oppTerritory = CellType.Debug_Player1_Territory;
-			}
-		}
-	}
-	private void clearDebugGUI(){
-		for (int a=0;a<width;a++)
-			for (int b=0;b<height;b++)
-				if (map.grid[a][b].id>=5)
-					map.grid[a][b] = CellType.Empty;
-	}
-	private void printGrid(TronMap.CellType[][] grid){
-		for (int a=0;a<grid.length;a++){
-			for (int b=0;b<grid[a].length;b++){
-				if (grid[a][b].id==1)
-					System.out.print("1");
-				else if (grid[a][b].id==2)
-					System.out.print("2");
-				else if (grid[a][b].wall)
-					System.out.print("#");
-				else
-					System.out.print(" ");
-			}
-			System.out.println();
-		}
-	}
-	private int calcTerritoryMinimax(TronMap.Direction dir,Point self,Point opp,int depth,int depthValue){
-		if (depth%2==0) throw new RuntimeException("depth must be odd");
-		if (depth==1) {
-			Point selfNext = map.moveByDirection(self, dir);
-			return depthValue + calcTerritory(selfNext,opp,true);
+		if (playerId == TronMap.PlayerType.One){
+			selfType = CellType.Player1;
+			selfTerritory = CellType.Debug_Player1_Territory;
+			oppType = CellType.Player2;
+			oppTerritory = CellType.Debug_Player2_Territory;
 		}
 		else{
-			Point p = map.moveByDirection(self, dir);
-			CellType origin = map.grid[p.x][p.y];
-			if (map.isWall(p))
-				return Integer.MIN_VALUE + depthValue;
-			map.grid[p.x][p.y] = selfType;
-			ArrayList<Point> oppPtrs = new ArrayList<Point>();
-			//			Point oppPtr = null;
-			int maxSpace=Integer.MIN_VALUE;
-			int value =  Integer.MIN_VALUE;
-			if (isEndGameMode){
-				for (TronMap.Direction d: dirs){
-					int v = calcTerritoryMinimax(d,p,opp,depth-2,depthValue*depth);
-					if (value<v)
-						value=v;
-				}
-			}
-			else{
-				for (TronMap.Direction d:dirs){
-					Point p2 = map.moveByDirection(opp, d);
-					int space = -calcTerritory(self,p2,false);
-
-					if (maxSpace<space){
-						oppPtrs.clear();
-						maxSpace=space;
-						oppPtrs.add(p2);
-						//					oppPtr = p2;
-					}
-					else if (maxSpace==space)
-						oppPtrs.add(p2);
-				}
-				for (Point oppPtr: oppPtrs){
-					if (oppPtr == null || map.isWall(oppPtr)){
-						map.grid[p.x][p.y] = origin;
-						return Integer.MAX_VALUE - depthValue;
-					}
-					//			System.out.println(debugOppDir);
-					CellType origin2 = map.grid[oppPtr.x][oppPtr.y];
-					map.grid[oppPtr.x][oppPtr.y] = oppType;
-					for (TronMap.Direction d: dirs){
-						int v = calcTerritoryMinimax(d,p,oppPtr,depth-2,depthValue*depth);
-						if (value<v){
-							value=v;
-						}
-					}
-
-
-					map.grid[oppPtr.x][oppPtr.y] = origin2;
-
-				}
-
-			}
-			map.grid[p.x][p.y] = origin;
-			return value;
-		}
+			selfType = CellType.Player2;
+			selfTerritory = CellType.Debug_Player2_Territory;
+			oppType = CellType.Player1;
+			oppTerritory = CellType.Debug_Player1_Territory;
+		}		
 	}
-	private int calcTerritory(Point s,Point o,boolean isCalcSelf){
+
+	private double calcSpace(Point self, Point opp){
+		int[][] selfGrid = new int[width][height];
+		int[][] oppGrid = new int[width][height];
+		calcGrid(selfGrid,self);
+		calcGrid(oppGrid,opp);
 		int space = 0;
-		Point p;
-		if (isCalcSelf){
-			p = s;
-		}
-		else{
-			p = o;
-		}
-		if  (map.isWall(p))
-			return Integer.MIN_VALUE;
-		resetCalcGrid(selfGrid);
-		resetCalcGrid(oppGrid);
-		calcGrid(s,0,selfGrid,!isCalcSelf);
-		calcGrid(o,0,oppGrid,isCalcSelf);
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
-				if (map.grid[a][b].id==0 ||
-						map.grid[a][b].id>=5){
-					if (selfGrid[a][b]<oppGrid[a][b])
-						space++;
-					else if (selfGrid[a][b]>oppGrid[a][b])
-						space--;
-				}
+				if (currentMap.isWall(new Point(a,b)) || 
+						(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
+					continue;
+				if (selfGrid[a][b]<oppGrid[a][b])
+					space++;
+				else
+					space--;
 			}
 		}
 		return space;
 	}
-
-	private void updateTerritoryGUI(){
-		resetCalcGrid(selfGrid);
-		resetCalcGrid(oppGrid);
-		calcGrid(self,0,selfGrid,true);
-		calcGrid(opp,1,oppGrid,true);
-		for (int a=0;a<width;a++){
-			for (int b=0;b<height;b++){
-				if (map.grid[a][b].id==0 ||
-						(map.grid[a][b].id>=5)){
-					if (selfGrid[a][b]<oppGrid[a][b])
-						map.grid[a][b] = selfTerritory;
-					else if (selfGrid[a][b]>oppGrid[a][b])
-						map.grid[a][b] = oppTerritory;
-					else
-						map.grid[a][b] = CellType.Debug_None_Territory;
+	private void calcGrid(int[][] grid,Point current){
+		for (int a=0;a<grid.length;a++)
+			for (int b=0;b<grid[a].length;b++)
+				grid[a][b] = Integer.MAX_VALUE;
+		int x = current.x;
+		int y = current.y;
+		calcGrid(grid, new Point(x+1,y),1);
+		calcGrid(grid, new Point(x-1,y),1);
+		calcGrid(grid, new Point(x,y+1),1);
+		calcGrid(grid, new Point(x,y-1),1);
+	}
+	private void calcGrid(int[][] grid,Point current,int dis){
+		if (currentMap.isWall(current))
+			return;
+		int x = current.x;
+		int y = current.y;
+		if (grid[x][y]>dis){
+			grid[x][y] = dis;
+			calcGrid(grid, new Point(x+1,y),dis+1);
+			calcGrid(grid, new Point(x-1,y),dis+1);
+			calcGrid(grid, new Point(x,y+1),dis+1);
+			calcGrid(grid, new Point(x,y-1),dis+1);
+		}
+	}
+	private double wallConst(TronMap.Direction d,Point current,int depth){
+		int num=0;
+		int wall=0;
+		
+		if (d==TronMap.Direction.East){
+			for (int x=current.x;x<current.x+depth;x++){
+				for (int y=current.y-x;y<=current.y+x;y++){
+					if (x>=0 && y>=0 && x<width && y<height){
+						num++;
+						if (currentMap.isWall(new Point(x,y)))
+							wall++;
+					}
 				}
 			}
 		}
-	}
-	private void testEndGame(ArrayList<Point> moved, Point current,Point goal){
-		if (current.equals(goal)){
-			isEndGameMode = false;
-			return;
-		}
-		if (map.isWall(current) || 
-			moved.contains(current) ||
-			!isEndGameMode || 
-			(current.x<=0 || current.x>=width || 
-			 current.y<=0 || current.y>=height))
-			return;
-		moved.add(current);
-		testEndGame(moved,new Point(current.x+1,current.y),goal);
-		testEndGame(moved,new Point(current.x-1,current.y),goal);
-		testEndGame(moved,new Point(current.x,current.y+1),goal);
-		testEndGame(moved,new Point(current.x,current.y-1),goal);
-	}
-
-
-	@Override
-	public TronMap.Direction move(TronMap map) {
-		this.map = map;
-		setUp();
-		self = map.position(playerId);
-		opp = map.enemyPosition(playerId);
-		int space = Integer.MIN_VALUE;
-		TronMap.Direction dir = null;
-
-		if (super.enableDebug){
-			System.out.println(move);
-			if (move==debugMove)
-				System.out.println("Dead move");
-		}
-
-
-		if (!isEndGameMode){
-			isEndGameMode = true;
-			ArrayList<Point> list = new ArrayList<Point>(width*height);
-			testEndGame(list,new Point(self.x+1,self.y),opp);
-			testEndGame(list,new Point(self.x-1,self.y),opp);
-			testEndGame(list,new Point(self.x,self.y+1),opp);
-			testEndGame(list,new Point(self.x,self.y-1),opp);
-		}
-		if (isEndGameMode)
-			System.out.println("In EndGameMode:");
-		for (TronMap.Direction d:dirs){
-			//			int newSpace = calcTerritory(dirs[a],self);
-			int newSpace;
-			if (isEndGameMode)
-				newSpace = calcTerritoryMinimax(d,self,opp,11,1);
-			else
-				newSpace = calcTerritoryMinimax(d,self,opp,5,1);
-
-//			if (super.enableDebug)
-//				System.out.println(d + " : " + newSpace);
-			if (space<newSpace){
-				space=newSpace;
-				dir = d;
+		else if (d==TronMap.Direction.West){
+			for (int x=current.x;x>current.x-depth;x--){
+				for (int y=current.y-x;y<=current.y+x;y++){
+					if (x>=0 && y>=0 && x<width && y<height){
+						num++;
+						if (currentMap.isWall(new Point(x,y)))
+							wall++;
+					}
+				}
 			}
 		}
-		if (dir==null){
-			System.out.println("No where to move...");
-			dir = TronMap.Direction.North;
+		else if (d==TronMap.Direction.South){
+			for (int y=current.y;y<current.y+depth;y++){
+				for (int x=current.x-y;x<=current.x+y;x++){
+					if (x>=0 && y>=0 && x<width && y<height){
+						num++;
+						if (currentMap.isWall(new Point(x,y)))
+							wall++;
+					}
+				}
+			}
 		}
-
-
-		// GUI update{
-		if (super.enableDebug){
-			clearDebugGUI();
-			updateTerritoryGUI();
+		else if (d==TronMap.Direction.North){
+			for (int y=current.y;y>current.y-depth;y--){
+				for (int x=current.x-y;x<=current.x+y;x++){
+					if (x>=0 && y>=0 && x<width && y<height){
+						num++;
+						if (currentMap.isWall(new Point(x,y)))
+							wall++;
+					}
+				}
+			}
 		}
+		return (double)wall/num;
+	}
+	private void calcEndGame(int depth){
+		double value = Integer.MIN_VALUE;
+		for (TronMap.Direction dir2:dirs){
+//			double wall = wallConst(dir2,self,depth);
+			double space = calcEndGame(new Move(self,dir2),depth-1,Integer.MAX_VALUE);
+//			space+=wall;
+			if (super.enableDebug){
+//				System.out.println(dir2+":(space)"+space/wall);
+//				System.out.println(dir2+":(wall)"+wall);
+				System.out.println(dir2+":(EndGame)"+space);
+			}
+			moves.pop();
+			
+			if (value< space){
+				dir = dir2;
+				value = space;
 
-		move++;
-		// TODO
-		return super.move(dir);
-	}	
-	 //*/
+			}
+		}
+	}
+	private double calcEndGame(Move move, int depth, double value){
+		if (moves.push(move)==null)
+			return Integer.MIN_VALUE+MAX_DEPTH-depth;
+		if (depth==0){
+			return calcEndGameSpace(self);
+		}
+		for (Direction dir2:dirs){
+			double space = calcEndGame(new Move(self,dir2),depth-1,value);
+			value = Math.max(value, space);
+			moves.pop();
+		}
+		return value;
+	}
+	private void calcAB(int depth){
+		double value = Integer.MIN_VALUE;
+		for (TronMap.Direction dir2:dirs){
+			double space =calcAB(new Move(self,dir2),depth-1,Integer.MIN_VALUE,Integer.MAX_VALUE);
+			System.out.println(dir2+":"+space);
+			moves.pop();
+			if (value< space){
+				dir = dir2;
+				value = space;
+
+			}
+		}
+	}
+	private double calcAB(Move move, int depth, double alpha, double beta){
+		if (moves.push(move)==null){
+			if (depth%2==0)
+				return Integer.MIN_VALUE+MAX_DEPTH-depth;
+			else
+				return Integer.MAX_VALUE-MAX_DEPTH+depth;
+		}
+		if (depth == 0)
+			return calcSpace(self,opp);
+		if (depth%2==1){
+			for (Direction dir2:dirs){
+				double space = calcAB(new Move(self,dir2),depth-1,alpha,beta);
+				alpha = Math.max(alpha, space);
+				moves.pop();
+				if (beta<=alpha)
+					break;
+			}
+			return alpha;
+		}
+		else{
+			for (Direction dir2:dirs){
+				double space = calcAB(new Move(opp,dir2),depth-1,alpha,beta);
+				beta = Math.min(beta, space);
+				moves.pop();
+				if (beta<=alpha)
+					break;
+			}
+			return beta;
+		}
+	}
+	private void clearDebug(TronMap map){
+		for (int a=0;a<width;a++){
+			for (int b=0;b<height;b++){
+				if (map.grid[a][b].id>=5)
+					map.grid[a][b] = CellType.Empty;
+			}
+		}
+	}
+	private void paintDebug(TronMap map){
+		clearDebug(map);
+		int[][] selfGrid = new int[width][height];
+		int[][] oppGrid = new int[width][height];
+		calcGrid(selfGrid,self);
+		calcGrid(oppGrid,opp);
+		for (int a=0;a<width;a++){
+			for (int b=0;b<height;b++){
+				if (currentMap.isWall(new Point(a,b)) || 
+						(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
+					continue;
+				if (selfGrid[a][b]<oppGrid[a][b])
+					map.grid[a][b] = selfTerritory;
+				else
+					map.grid[a][b] = oppTerritory;
+			}
+		}
+	}
+	private double max(double...values){
+		double max = values[0];
+		for (int a=1;a<values.length;a++){
+			if (max<values[a])
+				max = values[a];
+		}
+		return max;
+	}
+	private double calcEndGameSpace(Point self){
+		Set<Point> set = new HashSet<Point>();
+		return max (
+				calcEndGameSpace(set,new Point(self.x+1,self.y)),
+				calcEndGameSpace(set,new Point(self.x-1,self.y)),
+				calcEndGameSpace(set,new Point(self.x,self.y+1)),
+				calcEndGameSpace(set,new Point(self.x,self.y-1)));
+	}
+	private double calcEndGameSpace(Set<Point> checked, Point current){
+		if (checked.contains(current) || currentMap.isWall(current))
+			return 0;
+		checked.add(current);
+		return max (
+				calcEndGameSpace(checked,new Point(self.x+1,self.y)),
+				calcEndGameSpace(checked,new Point(self.x-1,self.y)),
+				calcEndGameSpace(checked,new Point(self.x,self.y+1)),
+				calcEndGameSpace(checked,new Point(self.x,self.y-1)));
+	}
+	@Override
+	public Direction move(TronMap map) {
+		moves = new MoveStack();
+		currentMap = map.clone();
+		width = map.width();
+		height = map.height();
+		self = map.position(playerId);
+		opp = map.enemyPosition(playerId);
+		dir = TronMap.Direction.North;
+		calcAB(7);
+		if (super.enableDebug)
+			paintDebug(map);
+		return dir;
+	}
+
 }

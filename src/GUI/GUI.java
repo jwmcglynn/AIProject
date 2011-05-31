@@ -77,7 +77,7 @@ public class GUI extends JFrame{
 		
 		menu.setDebug(true);
 		menu.setRealtime(false);
-		menu.setPlayer1(PlayerBackend.AITimed);
+		menu.setPlayer1(PlayerBackend.UCITronKen);
 		menu.setPlayer2(PlayerBackend.UCITronJeff);
 	}
 	
@@ -381,12 +381,14 @@ public class GUI extends JFrame{
 		private JRadioButtonMenuItem m_player1Human;
 		private JRadioButtonMenuItem m_player1UCIKen;
 		private JRadioButtonMenuItem m_player1UCIJeff;
+		private JRadioButtonMenuItem m_player1UCITimed;
 		private JRadioButtonMenuItem m_player1AI1;
 		private JRadioButtonMenuItem m_player1AI2;
 
 		private JRadioButtonMenuItem m_player2Human;
 		private JRadioButtonMenuItem m_player2UCIKen;
 		private JRadioButtonMenuItem m_player2UCIJeff;
+		private JRadioButtonMenuItem m_player2UCITimed;
 		private JRadioButtonMenuItem m_player2AI1;
 		private JRadioButtonMenuItem m_player2AI2;
 		
@@ -441,6 +443,7 @@ public class GUI extends JFrame{
 			players.add(m_player1Human = createRadioMenuItem("Human (WASD)", "1human", player1));
 			players.add(m_player1UCIKen = createRadioMenuItem("UCITron", "1uci", player1));
 			players.add(m_player1UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "1ucijeff", player1));
+			players.add(m_player1UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "1ucitime", player1));
 			players.add(m_player1AI1 = createRadioMenuItem("Google AI (a1k0n)", "1a1k0n", player1));
 			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1nathan", player1));
 			
@@ -450,6 +453,7 @@ public class GUI extends JFrame{
 			players.add(m_player2Human = createRadioMenuItem("Human (Arrow Keys)", "2human", player2));
 			players.add(m_player2UCIKen = createRadioMenuItem("UCITron", "2uci", player2));
 			players.add(m_player2UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "2ucijeff", player2));
+			players.add(m_player2UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "2ucitime", player2));
 			players.add(m_player2AI1 = createRadioMenuItem("Google AI (a1k0n)", "2a1k0n", player2));
 			players.add(m_player2AI2 = createRadioMenuItem("Google AI (Nathan)", "2nathan", player2));
 			add(players);
@@ -509,6 +513,9 @@ public class GUI extends JFrame{
 				menuPlayer1Changed(PlayerBackend.AIA1k0n);
 			} else if (command.equals("1nathan")) {
 				menuPlayer1Changed(PlayerBackend.AINathan);
+			} else if (command.equals("1ucitimed")) {
+				menuPlayer1Changed(PlayerBackend.AITimed);
+			
 				
 			} else if (command.equals("2human")) {
 				menuPlayer2Changed(PlayerBackend.Human);
@@ -516,6 +523,8 @@ public class GUI extends JFrame{
 				menuPlayer2Changed(PlayerBackend.UCITronKen);
 			} else if (command.equals("2ucijeff")) {
 				menuPlayer2Changed(PlayerBackend.UCITronJeff);
+			} else if (command.equals("2ucitimed")) {
+				menuPlayer2Changed(PlayerBackend.AITimed);
 			} else if (command.equals("2a1k0n")) {
 				menuPlayer2Changed(PlayerBackend.AIA1k0n);
 			} else if (command.equals("2nathan")) {
@@ -552,6 +561,8 @@ public class GUI extends JFrame{
 				case AINathan:
 					m_player1AI2.setSelected(true);
 					break;
+				case AITimed:
+					m_player1UCITimed.setSelected(true);
 			}
 			
 			menuPlayer1Changed(type);
@@ -574,6 +585,8 @@ public class GUI extends JFrame{
 				case AINathan:
 					m_player2AI2.setSelected(true);
 					break;
+				case AITimed:
+					m_player2UCITimed.setSelected(true);
 			}
 			
 			menuPlayer2Changed(type);
