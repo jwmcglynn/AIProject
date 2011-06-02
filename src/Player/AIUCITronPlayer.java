@@ -55,6 +55,68 @@ public class AIUCITronPlayer extends AIPlayer{
 		// Never occurs.
 		return null;
 	}
+	private class SpaceFunc{
+		private final TronMap currentMap;
+		private final int[][] isSelfT;
+		public final double value;
+		private final Point self;
+		private final Point opp;
+		
+		public SpaceFunc(TronMap currentMap,Point self,Point opp){
+			isSelfT = new int[width][height];
+			this.self = self;
+			this.opp = opp;
+			this.currentMap = currentMap;
+			value = calcSpace(self,opp);
+		}
+		private double calcSpace(Point self, Point opp){
+			int[][] selfGrid = new int[width][height];
+			int[][] oppGrid = new int[width][height];
+			calcGrid(selfGrid,self);
+			calcGrid(oppGrid,opp);
+			int space = 0;
+			for (int a=0;a<width;a++){
+				for (int b=0;b<height;b++){
+					if (currentMap.isWall(new Point(a,b)) || 
+							(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
+						continue;
+					if (selfGrid[a][b]<oppGrid[a][b]){
+						isSelfT[a][b] = 1;
+						space++;
+					}
+					else{
+						isSelfT[a][b] = -1;
+						space--;
+					}
+				}
+			}
+			return space;
+		}
+		private void calcGrid(int[][] grid,Point current){
+			for (int a=0;a<grid.length;a++)
+				for (int b=0;b<grid[a].length;b++)
+					grid[a][b] = Integer.MAX_VALUE;
+			int x = current.x;
+			int y = current.y;
+			calcGrid(grid, new Point(x+1,y),1);
+			calcGrid(grid, new Point(x-1,y),1);
+			calcGrid(grid, new Point(x,y+1),1);
+			calcGrid(grid, new Point(x,y-1),1);
+		}
+		private void calcGrid(int[][] grid,Point current,int dis){
+			if (currentMap.isWall(current))
+				return;
+			int x = current.x;
+			int y = current.y;
+			if (grid[x][y]>dis){
+				grid[x][y] = dis;
+				calcGrid(grid, new Point(x+1,y),dis+1);
+				calcGrid(grid, new Point(x-1,y),dis+1);
+				calcGrid(grid, new Point(x,y+1),dis+1);
+				calcGrid(grid, new Point(x,y-1),dis+1);
+			}
+		}
+	}
 	private class Move{
 		public final Point to;
 		public final CellType who;
@@ -110,49 +172,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		}		
 	}
 
-	private double calcSpace(Point self, Point opp){
-		int[][] selfGrid = new int[width][height];
-		int[][] oppGrid = new int[width][height];
-		calcGrid(selfGrid,self);
-		calcGrid(oppGrid,opp);
-		int space = 0;
-		for (int a=0;a<width;a++){
-			for (int b=0;b<height;b++){
-				if (currentMap.isWall(new Point(a,b)) || 
-						(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
-					continue;
-				if (selfGrid[a][b]<oppGrid[a][b])
-					space++;
-				else
-					space--;
-			}
-		}
-		return space;
-	}
-	private void calcGrid(int[][] grid,Point current){
-		for (int a=0;a<grid.length;a++)
-			for (int b=0;b<grid[a].length;b++)
-				grid[a][b] = Integer.MAX_VALUE;
-		int x = current.x;
-		int y = current.y;
-		calcGrid(grid, new Point(x+1,y),1);
-		calcGrid(grid, new Point(x-1,y),1);
-		calcGrid(grid, new Point(x,y+1),1);
-		calcGrid(grid, new Point(x,y-1),1);
-	}
-	private void calcGrid(int[][] grid,Point current,int dis){
-		if (currentMap.isWall(current))
-			return;
-		int x = current.x;
-		int y = current.y;
-		if (grid[x][y]>dis){
-			grid[x][y] = dis;
-			calcGrid(grid, new Point(x+1,y),dis+1);
-			calcGrid(grid, new Point(x-1,y),dis+1);
-			calcGrid(grid, new Point(x,y+1),dis+1);
-			calcGrid(grid, new Point(x,y-1),dis+1);
-		}
-	}
+	
 	private double wallConst(TronMap.Direction d,Point current,int depth){
 		int num=0;
 		int wall=0;
@@ -256,8 +276,9 @@ public class AIUCITronPlayer extends AIPlayer{
 			else
 				return Integer.MAX_VALUE-MAX_DEPTH+depth;
 		}
-		if (depth == 0)
-			return calcSpace(self,opp);
+		if (depth == 0){
+			return new SpaceFunc(currentMap,self,opp).value;
+		}
 		if (depth%2==1){
 			for (Direction dir2:dirs){
 				double space = calcAB(new Move(self,dir2),depth-1,alpha,beta);
@@ -289,16 +310,13 @@ public class AIUCITronPlayer extends AIPlayer{
 	}
 	private void paintDebug(TronMap map){
 		clearDebug(map);
-		int[][] selfGrid = new int[width][height];
-		int[][] oppGrid = new int[width][height];
-		calcGrid(selfGrid,self);
-		calcGrid(oppGrid,opp);
+		SpaceFunc space = new SpaceFunc(map,self,opp);
 		for (int a=0;a<width;a++){
 			for (int b=0;b<height;b++){
-				if (currentMap.isWall(new Point(a,b)) || 
-						(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
+				if (currentMap.isWall(new Point(a,b))||
+						space.isSelfT[a][b]==0)
 					continue;
-				if (selfGrid[a][b]<oppGrid[a][b])
+				if (space.isSelfT[a][b]==1)
 					map.grid[a][b] = selfTerritory;
 				else
 					map.grid[a][b] = oppTerritory;

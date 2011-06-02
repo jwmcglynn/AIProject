@@ -43,31 +43,37 @@ public class AITimedPlayer extends AIPlayer{
 
 	private class SearchingTree{
 		public class Node{
+			public final TronMap map;
 			public int alpha;
 			public int beta;
-			public Node from;
-			public Node[] next;
-			public Node(int a,int b){
+			public Node parent;
+			public Node[] child;
+			public int valueFrom;
+			public int value;
+			public Node(TronMap m,int a,int b){
+				map = m;
 				alpha = a;
 				beta = b;
-				next = new Node[4];
+				child = new Node[4];
+				valueFrom = -1;
+				parent = null;
 			}
 		}
 		private Node root;
 		private void pruning(){
 
 		}
-		public void addNode(TronMap.Direction[] dir,int alpha,int beta){
-			Node n = new Node(alpha,beta);
+		public void addNode(TronMap map, TronMap.Direction[] dir,int alpha,int beta){
+			Node n = new Node(map, alpha,beta);
 			Node temp = root;
 			for (int a=0;a<dir.length;a++){
 				if (a==dir.length-1){
-					temp.next[dir[a].id] = n;
-					n.from = temp.next[dir[a].id];
+					temp.child[dir[a].id] = n;
+					n.parent = temp.child[dir[a].id];
 					pruning();
 				}
 				else
-					temp = temp.next[dir[a].id];
+					temp = temp.child[dir[a].id];
 			}
 
 		}
@@ -203,54 +209,12 @@ public class AITimedPlayer extends AIPlayer{
 		}
 	}
 	int depth;
-	private void calcAB(int depth){
-		double value = Integer.MIN_VALUE;
-		for (TronMap.Direction dir2:dirs){
-			double space =calcAB(new Move(self,dir2),depth-1,Integer.MIN_VALUE,Integer.MAX_VALUE);
-			System.out.println(dir2+":"+space);
-			moves.pop();
-			if (value< space){
-				dir = dir2;
-				value = space;
-				
-			}
-		}
-	}
-	private double calcAB(Move move, int depth, double alpha, double beta){
-		if (moves.push(move)==null){
-			if (depth%2==0)
-				return Integer.MIN_VALUE+MAX_DEPTH-depth;
-			else
-				return Integer.MAX_VALUE-MAX_DEPTH+depth;
-		}
-		if (depth == 0)
-			return calcSpace(self,opp);
-		if (depth%2==1){
-			for (Direction dir2:dirs){
-				double space = calcAB(new Move(self,dir2),depth-1,alpha,beta);
-				alpha = Math.max(alpha, space);
-				moves.pop();
-				if (beta<=alpha)
-					break;
-			}
-			return alpha;
-		}
-		else{
-			for (Direction dir2:dirs){
-				double space = calcAB(new Move(opp,dir2),depth-1,alpha,beta);
-				beta = Math.min(beta, space);
-				moves.pop();
-				if (beta<=alpha)
-					break;
-			}
-			return beta;
-		}
-	}
+	private SearchingTree searchTree;
 	private void calcAB(){
 		if (timedOut || maps.isEmpty())
 			return;
 		depth+=2;
-		if (depth>=300)
+		if (depth>=MAX_DEPTH)
 			return;
 		State s = maps.pop();
 		currentMap = s.map;
@@ -269,6 +233,8 @@ public class AITimedPlayer extends AIPlayer{
 					break;
 				}
 				maps.push(new State(currentMap,alpha,beta));
+				
+//				searchTree.addNode(currentMap, , alpha, beta);
 				moves.pop();
 			}
 			alpha = Math.max(alpha, beta);
@@ -309,6 +275,7 @@ public class AITimedPlayer extends AIPlayer{
 	}
 	@Override
 	public Direction move(TronMap map) {
+		searchTree = new SearchingTree();
 		depth = 1;
 		moves = new MoveStack();
 		maps.push(new State(currentMap = map.clone(),Integer.MIN_VALUE,Integer.MAX_VALUE));
@@ -319,8 +286,7 @@ public class AITimedPlayer extends AIPlayer{
 		opp = map.enemyPosition(playerId);
 		dir = TronMap.Direction.North;
 		time.start();
-//		calcAB();
-		calcAB(5);
+		calcAB();
 		
 		time.stop();
 		maps.clear();
