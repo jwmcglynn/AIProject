@@ -77,8 +77,8 @@ public class GUI extends JFrame{
 		
 		menu.setDebug(true);
 		menu.setRealtime(false);
-		menu.setPlayer1(PlayerBackend.UCITronKen);
-		menu.setPlayer2(PlayerBackend.UCITronJeff);
+		menu.setPlayer1(PlayerBackend.UCITronJeff);
+		menu.setPlayer2(PlayerBackend.AITimed);
 	}
 	
 	private void setMode(Mode mode) {
@@ -150,6 +150,7 @@ public class GUI extends JFrame{
 	}
 	
 	private Player createPlayer(PlayerBackend type, TronMap.PlayerType number) {
+		System.out.println("Creating AI:"+type);
 		switch (type) {
 			default:
 			case Human:
@@ -163,6 +164,7 @@ public class GUI extends JFrame{
 			case AINathan:
 				return new AIContestPlayer(number, AIContestPlayer.AIType.NATHAN);
 			case  AITimed:
+				System.out.println("Created Real Timed AI.");
 				return new AITimedPlayer(number);
 		}
 	}
@@ -443,9 +445,9 @@ public class GUI extends JFrame{
 			players.add(m_player1Human = createRadioMenuItem("Human (WASD)", "1human", player1));
 			players.add(m_player1UCIKen = createRadioMenuItem("UCITron", "1uci", player1));
 			players.add(m_player1UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "1ucijeff", player1));
-			players.add(m_player1UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "1ucitime", player1));
+			players.add(m_player1UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "1ucitimed", player1));
 			players.add(m_player1AI1 = createRadioMenuItem("Google AI (a1k0n)", "1a1k0n", player1));
-			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1nathan", player1));
+			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1ucitimed", player1));
 			
 			players.add(new JSeparator());
 			players.add(createMenuItem("Player 2 (Blue)", ""));
@@ -453,7 +455,7 @@ public class GUI extends JFrame{
 			players.add(m_player2Human = createRadioMenuItem("Human (Arrow Keys)", "2human", player2));
 			players.add(m_player2UCIKen = createRadioMenuItem("UCITron", "2uci", player2));
 			players.add(m_player2UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "2ucijeff", player2));
-			players.add(m_player2UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "2ucitime", player2));
+			players.add(m_player2UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "2ucitimed", player2));
 			players.add(m_player2AI1 = createRadioMenuItem("Google AI (a1k0n)", "2a1k0n", player2));
 			players.add(m_player2AI2 = createRadioMenuItem("Google AI (Nathan)", "2nathan", player2));
 			add(players);

@@ -3,6 +3,7 @@ package Player;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Stack;
 
 import javax.swing.Timer;
@@ -11,289 +12,425 @@ import GUI.TronMap;
 import GUI.TronMap.CellType;
 import GUI.TronMap.Direction;
 import GUI.TronMap.PlayerType;
+import Player.AIJeffTronPlayer.FrontierQueue;
+import Player.AIJeffTronPlayer.Move;
+import Player.AIJeffTronPlayer.MoveScore;
+import System.SystemConstant;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.util.Stack;
+
+import javax.swing.JPanel;
+
+import GUI.TronMap;
+import GUI.TronMap.CellType;
+import GUI.TronMap.PlayerType;
 import System.SystemConstant;
 
 public class AITimedPlayer extends AIPlayer{
 
-	
-	private final static int MAX_DEPTH = 300;
-
-	private CellType selfType;
-	private CellType oppType;
-	private CellType selfTerritory;
-	private CellType oppTerritory;
-	private Point self;
-	private Point opp;
-
-	private final static TronMap.Direction[] dirs = 
-	{TronMap.Direction.North,
-		TronMap.Direction.East, 
-		TronMap.Direction.South, 
-		TronMap.Direction.West};
-
-	MoveStack moves;
-	private Stack<State> maps;
-	private TronMap currentMap;
-
-	private int width;
-	private int height;
-
-	private boolean timedOut;
-	Timer time;
-
-	private class SearchingTree{
-		public class Node{
-			public final TronMap map;
-			public int alpha;
-			public int beta;
-			public Node parent;
-			public Node[] child;
-			public int valueFrom;
-			public int value;
-			public Node(TronMap m,int a,int b){
-				map = m;
-				alpha = a;
-				beta = b;
-				child = new Node[4];
-				valueFrom = -1;
-				parent = null;
-			}
-		}
-		private Node root;
-		private void pruning(){
-
-		}
-		public void addNode(TronMap map, TronMap.Direction[] dir,int alpha,int beta){
-			Node n = new Node(map, alpha,beta);
-			Node temp = root;
-			for (int a=0;a<dir.length;a++){
-				if (a==dir.length-1){
-					temp.child[dir[a].id] = n;
-					n.parent = temp.child[dir[a].id];
-					pruning();
-				}
-				else
-					temp = temp.child[dir[a].id];
-			}
-
-		}
-
-	}
-	Direction dir;
-	private class State{
-		public final TronMap map;
-		public double alpha;
-		public double beta;
-		public State(TronMap m, double a, double b){
-			map = m;
-			alpha = a;
-			beta = b;
-		}
-	}
-	public Point moveByDirection(Point pos, Direction dir) {
-		switch (dir) {
-		case North:
-			return new Point(pos.x, Math.max(pos.y - 1, 0));
-		case East:
-			return new Point(pos.x + 1, pos.y);
-		case South:
-			return new Point(pos.x, pos.y + 1);
-		case West:
-			return new Point(Math.max(pos.x - 1, 0), pos.y);
-		}
-
-		// Never occurs.
-		return null;
-	}
-	private class Move{
-		public final Point to;
-		public final CellType who;
-		public final Point from;
-		public final boolean isSelf;
-		public final CellType original;
-		public Move(Point f,TronMap.Direction dir){
-			from = f;
-			to = moveByDirection(f, dir);
-			original = currentMap.getCell(to);
-			this.isSelf = f.equals(self);
-			who = (isSelf)?selfType:oppType;
-		}
-	}
-	private class MoveStack extends Stack<Move>{
-		private static final long serialVersionUID = -4946358323356244720L;
-		public Move push(Move m){
-			if (currentMap.isWall(m.to))
-				return super.push(null);
-			currentMap.setCell(m.to, m.who);
-			if (m.isSelf)
-				self = m.to;
-			else
-				opp = m.to;
-			return super.push(m);
-		}
-		public Move pop(){
-			final Move m  = super.pop();
-			if (m == null)
-				return null;
-			currentMap.setCell(m.to, m.original);
-			if (m.isSelf)
-				self = m.from;
-			else
-				opp = m.from;
-			return m;
-		}
-	}
 
 	public AITimedPlayer(PlayerType currentPlayer) {
 		super(currentPlayer);
-		maps = new Stack<State>();
-		if (playerId == TronMap.PlayerType.One){
-			selfType = CellType.Player1;
-			selfTerritory = CellType.Debug_Player1_Territory;
-			oppType = CellType.Player2;
-			oppTerritory = CellType.Debug_Player2_Territory;
-		}
-		else{
-			selfType = CellType.Player2;
-			selfTerritory = CellType.Debug_Player2_Territory;
-			oppType = CellType.Player1;
-			oppTerritory = CellType.Debug_Player1_Territory;
-		}		
-		time = new Timer(SystemConstant.TimeLimit, new ActionListener(){
+		time = new Timer(SystemConstant.TimeLimit,new ActionListener(){
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				timedOut = true;
-			}});
+			}
+		});
 	}
 
-	private double calcSpace(Point self, Point opp){
-		int[][] selfGrid = new int[width][height];
-		int[][] oppGrid = new int[width][height];
-		calcGrid(selfGrid,self);
-		calcGrid(oppGrid,opp);
-		int space = 0;
-		for (int a=0;a<width;a++){
-			for (int b=0;b<height;b++){
-				if (currentMap.isWall(new Point(a,b)) || 
-						(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
-					continue;
-				if (selfGrid[a][b]<oppGrid[a][b])
-					space++;
-				else
-					space--;
-			}
-		}
-		return space;
-	}
-	private void calcGrid(int[][] grid,Point current){
-		for (int a=0;a<grid.length;a++)
-			for (int b=0;b<grid[a].length;b++)
-				grid[a][b] = Integer.MAX_VALUE;
-		int x = current.x;
-		int y = current.y;
-		calcGrid(grid, new Point(x+1,y),1);
-		calcGrid(grid, new Point(x-1,y),1);
-		calcGrid(grid, new Point(x,y+1),1);
-		calcGrid(grid, new Point(x,y-1),1);
-	}
-	private void calcGrid(int[][] grid,Point current,int dis){
-		if (currentMap.isWall(current))
-			return;
-		int x = current.x;
-		int y = current.y;
-		if (grid[x][y]>dis){
-			grid[x][y] = dis;
-			calcGrid(grid, new Point(x+1,y),dis+1);
-			calcGrid(grid, new Point(x-1,y),dis+1);
-			calcGrid(grid, new Point(x,y+1),dis+1);
-			calcGrid(grid, new Point(x,y-1),dis+1);
-		}
-	}
-	int depth;
-	private SearchingTree searchTree;
-	private void calcAB(){
-		if (timedOut || maps.isEmpty())
-			return;
-		depth+=2;
-		if (depth>=MAX_DEPTH)
-			return;
-		State s = maps.pop();
-		currentMap = s.map;
-		double alpha = s.alpha;
-		double beta = s.beta;
+	private Timer time;
+	private final static int MIN_DEPTH = 3;
+	private final static int ENDGAME_MIN_DEPTH = 6;
+	private boolean timedOut;
+	private SearchState m_state;
 
-		for (Direction dir2: dirs){
-			if (moves.push(new Move(self,dir2))==null)
-				continue;
-			for (Direction dir3:dirs){
-				if (moves.push(new Move(opp,dir3))==null)
-					continue;
-				beta = Math.min(beta, this.calcSpace(self,opp));
-				if (beta<alpha){
-					moves.pop();
-					break;
-				}
-				maps.push(new State(currentMap,alpha,beta));
-				
-//				searchTree.addNode(currentMap, , alpha, beta);
-				moves.pop();
-			}
-			alpha = Math.max(alpha, beta);
-			if (beta<alpha){
-				moves.pop();
-				break;
-			}
-			dir = dir2;
-			moves.pop();
-		}
-		calcAB();
-	}
-	private void clearDebug(TronMap map){
-		for (int a=0;a<width;a++){
-			for (int b=0;b<height;b++){
-				if (map.grid[a][b].id>=5)
-					map.grid[a][b] = CellType.Empty;
-			}
+	TronMap m_map;
+
+	boolean m_endgameMode = false;
+
+	////////
+
+	static class Move {
+		PlayerType player;
+		Point oldPos;
+
+		public Move(PlayerType _player, Point _oldPos) {
+			player = _player;
+			oldPos = _oldPos;
 		}
 	}
-	private void paintDebug(TronMap map){
-		clearDebug(map);
-		int[][] selfGrid = new int[width][height];
-		int[][] oppGrid = new int[width][height];
-		calcGrid(selfGrid,self);
-		calcGrid(oppGrid,opp);
-		for (int a=0;a<width;a++){
-			for (int b=0;b<height;b++){
-				if (currentMap.isWall(new Point(a,b)) || 
-						(selfGrid[a][b]==Integer.MAX_VALUE && oppGrid[a][b]==Integer.MAX_VALUE))
-					continue;
-				if (selfGrid[a][b]<oppGrid[a][b])
-					map.grid[a][b] = selfTerritory;
-				else
-					map.grid[a][b] = oppTerritory;
-			}
+
+	static class FrontierQueue {
+		int[] frontierX;
+		int[] frontierY;
+		int[] distance;
+		int queueBegin = 0;
+		int queueEnd = 0;
+
+		public FrontierQueue(int size) {
+			frontierX = new int[size];
+			frontierY = new int[size];
+			distance = new int[size];
 		}
+
+		public int topX() {
+			return frontierX[queueBegin];
+		}
+
+		public int topY() {
+			return frontierY[queueBegin];
+		}
+
+		public int topDistance() {
+			return distance[queueBegin];
+		}
+
+		public void push(int x, int y, int dist) {
+			frontierX[queueEnd] = x;
+			frontierY[queueEnd] = y;
+			distance[queueEnd] = dist;
+			++queueEnd;
+			if (queueEnd == frontierX.length) queueEnd = 0;
+		}
+
+		public void pop() {
+			assert(queueBegin != queueEnd);
+			++queueBegin;
+			if (queueBegin == frontierX.length) queueBegin = 0;
+		}
+
+		public boolean isEmpty() {
+			return (queueBegin == queueEnd);
+		}
+
 	}
-	@Override
-	public Direction move(TronMap map) {
-		searchTree = new SearchingTree();
-		depth = 1;
-		moves = new MoveStack();
-		maps.push(new State(currentMap = map.clone(),Integer.MIN_VALUE,Integer.MAX_VALUE));
-		width = map.width();
-		height = map.height();
-		timedOut = false;
-		self = map.position(playerId);
-		opp = map.enemyPosition(playerId);
-		dir = TronMap.Direction.North;
-		time.start();
-		calcAB();
+	
+	private class SearchState {
+		private SearchFunc func;
+
+		public int width;
+		public int height;
+		private int depth;
 		
-		time.stop();
-		maps.clear();
+		private PlayerType enemyId;
 
-		if (super.enableDebug)
-			paintDebug(map);
-		return dir;
+		public SearchState (int width,int height,PlayerType pid){
+			this.width = width;
+			this.height = height;
+			enemyId = (playerId == PlayerType.One ? PlayerType.Two : PlayerType.One);
+			
+		}
+		public void search(TronMap map){
+			func = new SearchFunc(playerId, map);
+			if (!m_endgameMode) {
+				// voronoiHeuristic will determine if we should be in endgame mode.
+				func.voronoiHeuristic();
+				m_endgameMode = !func.hasBattlefront;
+			}
+			timedOut=false;
+			if (m_endgameMode) {
+				depth = ENDGAME_MIN_DEPTH;
+				System.out.println("Endgame mode");
+				while(!timedOut){
+					MoveScore move = func.endgameMove(depth++);
+					if (move!=null)
+					facingDir = move.dir;
+				}
+			} else {
+				depth = MIN_DEPTH;
+				while(!timedOut){
+					MoveScore move = func.findBestMove(depth++);
+					if (move!=null)
+						facingDir = move.dir;
+				}
+			}
+		}
+		private class SearchFunc {
+			static final int k_unreachable = Integer.MIN_VALUE;
+			static final int k_tie = Integer.MAX_VALUE;
+			
+			public TronMap map;
+			public PlayerType playerId;
+
+			Stack<Move> undoStack = new Stack<Move>();
+			public int[][] visited;
+			public FrontierQueue queue;
+			
+			public boolean hasBattlefront;
+			private int distanceFromBattlefront;
+			
+			public SearchFunc(PlayerType _playerId,TronMap m) {
+				map = m;
+				playerId = _playerId;
+				
+				visited = new int[width][height];
+				queue = new FrontierQueue(width * height);
+				hasBattlefront = false;
+			}
+			
+			private MoveScore findBestMove(int depth) {
+				if (timedOut)
+					return null;
+				if (depth == 0) {
+					// Go in an arbitrary direction, depth too far.  Return accurate score.
+					return new MoveScore(TronMap.Direction.West, voronoiHeuristic());
+				} else {
+					TronMap.Direction best = TronMap.Direction.West; // Arbitrary starting direction.
+					MoveScore bestScore = null;
+					double bestDist = Double.POSITIVE_INFINITY;
+					
+					for (TronMap.Direction d : TronMap.Direction.values()) {
+						if (isMovePossible(playerId, d)) {
+							performMove(playerId, d);
+							MoveScore sample = findBestEnemyMove(depth);
+							double dist = map.position(playerId).distanceSq(map.enemyPosition(playerId));
+							undoMove();
+							if (sample==null)
+								return null;
+							if (bestScore == null || sample.score > bestScore.score || (sample.score == bestScore.score && dist < bestDist)) {
+								best = d;
+								bestScore = sample;
+								bestDist = dist;
+							}
+						}
+					}
+					
+					//System.out.println("d" + depth + ", " + best + ", score " + bestScore.score);
+					
+					return new MoveScore(best, bestScore == null ? -10000 : bestScore.score + 1);
+				}
+			}
+			
+			private int numberOfAdjacentWalls(PlayerType player) {
+				int num = 0;
+				for (TronMap.Direction d : TronMap.Direction.values()) {
+					if (!isMovePossible(player, d)) {
+						++num;
+					}
+				}
+				
+				return num;
+			}
+			
+			private MoveScore findBestEnemyMove(int depth) {
+				PlayerType enemyId = (playerId == PlayerType.One ? PlayerType.Two : PlayerType.One);
+				
+				TronMap.Direction best = TronMap.Direction.West; // Arbitrary starting direction.
+				MoveScore bestScore = null;
+				
+				for (TronMap.Direction d : TronMap.Direction.values()) {
+					if (isMovePossible(enemyId, d)) {
+						performMove(enemyId, d);
+						MoveScore sample = findBestMove(depth - 1);
+						undoMove();
+						if (sample==null)
+							return null;
+						sample.score = sample.score;
+						
+						if (bestScore == null || sample.score < bestScore.score) {
+							best = d;
+							bestScore = sample;
+						}
+					}
+				}
+				
+				//System.out.println("d" + depth + ", Enemy " + best + ", score " + bestScore.score);
+				
+				return new MoveScore(best, bestScore == null ? 10000 : bestScore.score - 1);
+			}
+			
+			private MoveScore endgameMove(int depth) {
+				if (timedOut) return null;
+				if (depth == 0) return new MoveScore(TronMap.Direction.West, spaceAvailableHeuristic(playerId));
+				
+				TronMap.Direction best = TronMap.Direction.West; // Arbitrary starting direction.
+				MoveScore bestScore = null;
+				
+				for (TronMap.Direction d : TronMap.Direction.values()) {
+					if (isMovePossible(playerId, d)) {
+						performMove(playerId, d);
+						MoveScore sample = endgameMove(depth - 1);
+						undoMove();
+						if (sample == null)
+							return null;
+						
+						if (bestScore == null || sample.score > bestScore.score) {
+							best = d;
+							bestScore = sample;
+						}
+					}
+				}
+				
+				return new MoveScore(best, bestScore == null ? 0 : bestScore.score + numberOfAdjacentWalls(playerId));
+			}
+			
+
+			
+			private boolean isMovePossible(PlayerType player, TronMap.Direction dir) {
+				return !map.isWall(map.moveByDirection(map.position(player), dir));
+			}
+			
+			private void performMove(PlayerType player, TronMap.Direction dir) {
+				Point oldPos = map.position(player);
+				Point dest = map.moveByDirection(oldPos, dir);
+				
+				if (player == PlayerType.One) {
+					map.setCell(oldPos, CellType.Player1Moved);
+					map.setCell(dest, CellType.Player1);
+				} else {
+					map.setCell(oldPos, CellType.Player2Moved);
+					map.setCell(dest, CellType.Player2);
+				}
+				
+				map.setPosition(player, dest);
+				undoStack.add(new Move(player, oldPos));
+			}
+			
+			private void undoMove() {
+				Move move = undoStack.pop();
+				Point curPos = map.position(move.player);
+				
+				if (move.player == PlayerType.One) {
+					assert(map.getCell(curPos) == CellType.Player1);
+					map.setCell(move.oldPos, CellType.Player1);
+				} else {
+					assert(map.getCell(curPos) == CellType.Player2);
+					map.setCell(move.oldPos, CellType.Player2);
+				}
+
+				map.setPosition(move.player, move.oldPos);
+				map.setCell(curPos, CellType.Empty);
+			}
+			
+			private void addDijkstraEntry(int x, int y, int value) {
+				if (visited[x][y] == 0) {
+					visited[x][y] = value;
+					queue.push(x, y, value);
+				} else if (visited[x][y] == -value) {
+					visited[x][y] = k_tie;
+					if (!hasBattlefront) distanceFromBattlefront = value;
+					hasBattlefront = true;
+				} else if ((visited[x][y] > 0) != (value > 0)) {
+					if (visited[x][y] != k_unreachable && visited[x][y] != k_tie) {
+						if (!hasBattlefront) distanceFromBattlefront = value;
+						hasBattlefront = true;
+					}
+				}
+			}
+			
+			private int voronoiHeuristic() {
+				hasBattlefront = false;
+				distanceFromBattlefront = Integer.MAX_VALUE;
+				
+				// Reset the m_visited array.
+				for (int x = 0; x < width; ++x) {
+					for (int y = 0; y < height; ++y) {
+						visited[x][y] = (map.grid[x][y].wall ? k_unreachable : 0);
+					}
+				}
+				
+				assert(queue.isEmpty());
+				
+				//
+				
+				// Use negative distances to indicate enemy.
+				int myCount = -1;
+				int enemyCount = -1;
+				
+				queue.push(map.position(playerId).x, map.position(playerId).y, 1);
+				queue.push(map.enemyPosition(playerId).x, map.enemyPosition(playerId).y, -1);
+				
+				while (!queue.isEmpty()) {
+					int x = queue.topX();
+					int y = queue.topY();
+					int dist = queue.topDistance();
+					queue.pop();
+					
+					// Count number of cells belonging to us.
+					if (dist > 0) {
+						++myCount;
+						++dist;
+					} else {
+						++enemyCount;
+						--dist;
+					}
+					
+					// Add neighbors.
+					if (y > 0) addDijkstraEntry(x, y - 1, dist); // North.
+					if (x + 1 < width) addDijkstraEntry(x + 1, y, dist); // East.
+					if (y + 1 < height) addDijkstraEntry(x, y + 1, dist); // South.
+					if (x > 0) addDijkstraEntry(x - 1, y, dist); // West.
+				}
+				
+				return myCount - enemyCount;
+			}
+			
+			private int spaceAvailableHeuristic(PlayerType player) {
+				// Reset the m_visited array.
+				for (int x = 0; x < width; ++x) {
+					for (int y = 0; y < height; ++y) {
+						visited[x][y] = (map.grid[x][y].wall ? k_unreachable : 0);
+					}
+				}
+				
+				assert(queue.isEmpty());
+				
+				//
+				
+				// Use negative distances to indicate enemy.
+				int myCount = -1;
+				queue.push(map.position(player).x, map.position(playerId).y, 1);
+				
+				// Perform a flood fill.
+				while (!queue.isEmpty()) {
+					int x = queue.topX();
+					int y = queue.topY();
+					queue.pop();
+					
+					// Count number of cells belonging to us.
+					++myCount;
+					
+					// Add neighbors.
+					if (y > 0) addDijkstraEntry(x, y - 1, 1); // North.
+					if (x + 1 < width) addDijkstraEntry(x + 1, y, 1); // East.
+					if (y + 1 < height) addDijkstraEntry(x, y + 1, 1); // South.
+					if (x > 0) addDijkstraEntry(x - 1, y, 1); // West.
+				}
+				
+				return myCount;
+			}
+		}
 	}
+
+
+
+
+	static class MoveScore {
+		TronMap.Direction dir;
+		double score;
+
+		public MoveScore(TronMap.Direction _dir, double _score) {
+			dir = _dir;
+			score = _score;
+		}
+
+	};
+
+	public TronMap.Direction move(TronMap map) {
+		if (map == null || m_state == null || map.width() != m_state.width || map.height() != m_state.height) {
+			reinitialize();
+			m_state = new SearchState(map.width(),map.height(), playerId);
+		}
+
+		time.start();
+		m_state.search(map.clone());
+		time.stop();
+		return facingDir;
+
+		// Check to see if we are endgame mode.
+	}	
 
 }
