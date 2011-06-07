@@ -232,7 +232,7 @@ public class AIUCITronPlayer extends AIPlayer{
 			if (super.enableDebug){
 //				System.out.println(dir2+":(space)"+space/wall);
 //				System.out.println(dir2+":(wall)"+wall);
-				System.out.println(dir2+":(EndGame)"+space);
+//				System.out.println(dir2+":(EndGame)"+space);
 			}
 			moves.pop();
 			
@@ -260,7 +260,7 @@ public class AIUCITronPlayer extends AIPlayer{
 		double value = Integer.MIN_VALUE;
 		for (TronMap.Direction dir2:dirs){
 			double space =calcAB(new Move(self,dir2),depth-1,Integer.MIN_VALUE,Integer.MAX_VALUE);
-			System.out.println(dir2+":"+space);
+//			System.out.println(dir2+":"+space);
 			moves.pop();
 			if (value< space){
 				dir = dir2;
@@ -362,6 +362,11 @@ public class AIUCITronPlayer extends AIPlayer{
 		if (super.enableDebug)
 			paintDebug(map);
 		return dir;
+	}
+
+	@Override
+	public String toString() {
+		return "ucitron";
 	}
 
 }

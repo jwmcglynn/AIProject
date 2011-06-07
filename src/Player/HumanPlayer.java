@@ -9,7 +9,12 @@ public class HumanPlayer extends Player {
 		if (currentPlayer == TronMap.PlayerType.Two) facingDir = Direction.North; 
 		else facingDir = Direction.South; 
 	}
-
+	
+	@Override
+	public String toString() {
+		return "human";
+	}
+	
 	@Override
 	public TronMap.Direction move(TronMap map) {
 		return super.move(facingDir);

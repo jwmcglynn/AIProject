@@ -29,6 +29,18 @@ public class AIContestPlayer extends AIPlayer {
 		}*/
 	}
 	
+	@Override
+	public String toString() {
+		switch (m_aiType) {
+			case A1K0N:
+				return "a1k0n";
+			case NATHAN:
+				return "nathan";
+			default:
+				return "unknown";
+		}
+	}
+	
 	protected Process createExternalProcess() throws IOException {
 		switch (m_aiType) {
 			default:
@@ -106,7 +118,7 @@ public class AIContestPlayer extends AIPlayer {
 		int dir;
 		try {
 			String result = processOutput.readLine();
-			System.err.println("READ: " + result);
+			// System.err.println("READ: " + result);
 			
 			dir = Integer.parseInt(result);
 		} catch (NumberFormatException e) {

@@ -4,14 +4,18 @@ import java.util.LinkedList;
 import Player.*;
 
 public class TronController {
+	public boolean debug = false;
+	
 	public Player m_player1;
 	public Player m_player2;
+	
+	private Player m_winner;
 	private TronMap m_map;
-	public boolean m_gameOver = false;
+	private boolean m_gameOver = false;
 	
 	private LinkedList<TronMap> m_history = new LinkedList<TronMap>();
 	
-	TronController() {
+	public TronController() {
 	}
 	
 	public void setPlayer1(Player player) {
@@ -24,6 +28,14 @@ public class TronController {
 	
 	public TronMap getMap() {
 		return m_map;
+	}
+	
+	public boolean isGameOver() {
+		return m_gameOver;
+	}
+	
+	public Player getWinner() {
+		return m_winner;
 	}
 	
 	public void loadMap(TronMap map) {
@@ -71,7 +83,7 @@ public class TronController {
 		long startTime = System.nanoTime();
 		TronMap.Direction dir1 = m_player1.move(map);
 		long endTime = System.nanoTime();
-		System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
+		if (debug) System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
 		// Update player1 position.
 		map.grid[map.player1.x][map.player1.y] = TronMap.CellType.Player1Moved;
@@ -85,7 +97,7 @@ public class TronController {
 		startTime = System.nanoTime();
 		TronMap.Direction dir2 = m_player2.move(map);
 		endTime = System.nanoTime();
-		System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
+		if (debug) System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
 		map.grid[map.player2.x][map.player2.y] = TronMap.CellType.Player2Moved;
 		map.player2 = map.moveByDirection(map.player2, dir2);
@@ -102,11 +114,14 @@ public class TronController {
 			// One player died.  Who?
 			m_gameOver = true;
 			if (!valid1 && !valid2) {
-				System.out.println("Game over, tie.");
+				if (debug) System.out.println("Game over, tie.");
+				m_winner = null;
 			} else if (valid1) {
-				System.out.println("Game over, player 1 wins.");
+				if (debug) System.out.println("Game over, player 1 wins.");
+				m_winner = m_player1;
 			} else {
-				System.out.println("Game over, player 2 wins.");
+				if (debug) System.out.println("Game over, player 2 wins.");
+				m_winner = m_player2;
 			}
 		}
 		

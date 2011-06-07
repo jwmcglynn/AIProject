@@ -61,6 +61,8 @@ public class GUI extends JFrame{
 	}
 	
 	private void internalCtor() {
+		controller.debug = true;
+		
 		setJMenuBar(menu = new MyMenuBar());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -149,8 +151,7 @@ public class GUI extends JFrame{
 		controller.setDebugMessage(m_debug);
 	}
 	
-	private Player createPlayer(PlayerBackend type, TronMap.PlayerType number) {
-		System.out.println("Creating AI:"+type);
+	public static Player createPlayer(PlayerBackend type, TronMap.PlayerType number) {
 		switch (type) {
 			default:
 			case Human:
@@ -164,7 +165,6 @@ public class GUI extends JFrame{
 			case AINathan:
 				return new AIContestPlayer(number, AIContestPlayer.AIType.NATHAN);
 			case  AITimed:
-				System.out.println("Created Real Timed AI.");
 				return new AITimedPlayer(number);
 		}
 	}

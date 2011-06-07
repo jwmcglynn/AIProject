@@ -16,7 +16,7 @@ public class RunnerThread extends Thread {
 			long endTime = System.nanoTime();
 			
 			m_gui.needsRedraw();
-			if (m_gui.controller.m_gameOver) return;
+			if (m_gui.controller.isGameOver()) return;
 			
 			// Delay until next move.
 			long timeTaken = (endTime - startTime) / 1000000;

@@ -417,12 +417,16 @@ public class AIJeffTronPlayer extends AIPlayer {
 		}
 		
 		if (m_endgameMode) {
-			System.out.println("Endgame mode");
 			MoveScore move = m_state.endgameMove(12);
 			return move.dir;
 		} else {
 			MoveScore move = m_state.findBestMove(5);
 			return move.dir;
 		}
-	}	
+	}
+
+	@Override
+	public String toString() {
+		return "ucijeff";
+	}
 }

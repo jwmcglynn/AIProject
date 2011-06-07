@@ -133,7 +133,7 @@ public class AITimedPlayer extends AIPlayer{
 			timedOut=false;
 			if (m_endgameMode) {
 				depth = ENDGAME_MIN_DEPTH;
-				System.out.println("Endgame mode");
+				//System.out.println("Endgame mode");
 				while(!timedOut){
 					MoveScore move = func.endgameMove(depth++);
 					if (move!=null)
@@ -433,4 +433,8 @@ public class AITimedPlayer extends AIPlayer{
 		// Check to see if we are endgame mode.
 	}	
 
+	@Override
+	public String toString() {
+		return "ucitimed";
+	}
 }
