@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 
+#include "mingw_compat.h"
 #include "artictbl.h"
 
 //#define TIMEOUT_USEC 9900
@@ -963,9 +964,11 @@ static int next_move() {
 int main(int argc, char **argv) {
   memset(_killer, 0, sizeof(_killer));
   bool firstmove = true;
-  signal(SIGALRM, _alrm_handler);
+  mingw_signal(SIGALRM, _alrm_handler);
+  #ifndef _WIN32
   setlinebuf(stdout);
-  while (map_update()) {
+  #endif
+  if (map_update()) {
     if(argc>1 && atoi(argv[1])) {
       position p = curstate.p[0];
       curstate.p[0] = curstate.p[1];

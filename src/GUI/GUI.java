@@ -15,6 +15,7 @@ import java.awt.event.KeyListener;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
+import Player.AIArticulationTron;
 import Player.AIContestPlayer;
 import Player.AIJeffTronPlayer;
 import Player.AITimedPlayer;
@@ -51,6 +52,7 @@ public class GUI extends JFrame{
 		, AIA1k0n
 		, AINathan
 		, AITimed
+		, AIArticulation
 	}
 	
 	public GUI(String filename) {
@@ -164,12 +166,14 @@ public class GUI extends JFrame{
 				return new AIContestPlayer(number, AIContestPlayer.AIType.A1K0N);
 			case AINathan:
 				return new AIContestPlayer(number, AIContestPlayer.AIType.NATHAN);
-			case  AITimed:
+			case AITimed:
 				return new AITimedPlayer(number);
+			case AIArticulation:
+				return new AIArticulationTron(number);
 		}
 	}
 	
-	/*************************************************************************/
+	/******************************************************w*******************/
 	
 	private void loadMap(String filename) {
 		stopRealtimeThread();
@@ -229,6 +233,7 @@ public class GUI extends JFrame{
 		private JButton m_east;
 		private JButton m_south;
 		private JButton m_undo;
+		private JButton m_step;
 		
 		public GameControlPanel() {
 			setLayout(new GridBagLayout());
@@ -251,11 +256,15 @@ public class GUI extends JFrame{
 			c.gridwidth = 4;
 			add(m_undo = new JButton("Undo Last Move"), c);
 			
+			c.gridy = 4;
+			add(m_step = new JButton("Step"), c);
+			
 			m_north.addActionListener(this);
 			m_west.addActionListener(this);
 			m_east.addActionListener(this);
 			m_south.addActionListener(this);
 			m_undo.addActionListener(this);
+			m_step.addActionListener(this);
 		}
 		
 		@Override
@@ -284,6 +293,8 @@ public class GUI extends JFrame{
 			else if (button.equals(m_undo)) {
 				controller.undo();
 				needsRedraw();
+			} else if (button.equals(m_step)) {
+				menuStep();
 			}
 		}
 	}
@@ -384,6 +395,7 @@ public class GUI extends JFrame{
 		private JRadioButtonMenuItem m_player1UCIKen;
 		private JRadioButtonMenuItem m_player1UCIJeff;
 		private JRadioButtonMenuItem m_player1UCITimed;
+		private JRadioButtonMenuItem m_player1UCIArt;
 		private JRadioButtonMenuItem m_player1AI1;
 		private JRadioButtonMenuItem m_player1AI2;
 
@@ -391,6 +403,7 @@ public class GUI extends JFrame{
 		private JRadioButtonMenuItem m_player2UCIKen;
 		private JRadioButtonMenuItem m_player2UCIJeff;
 		private JRadioButtonMenuItem m_player2UCITimed;
+		private JRadioButtonMenuItem m_player2UCIArt;
 		private JRadioButtonMenuItem m_player2AI1;
 		private JRadioButtonMenuItem m_player2AI2;
 		
@@ -399,9 +412,6 @@ public class GUI extends JFrame{
 			/**
 			 * Game
 			 * 		-> Choose Map
-			 * 		-> Load Replay ...
-			 * 		-> ------
-			 * 		-> Save Replay ...
 			 * 		-> ------
 			 * 		-> [ ] Real-time Mode
 			 * 		-> [ ] Draw Debug Data
@@ -425,9 +435,6 @@ public class GUI extends JFrame{
 			// Game.
 			JMenu game = new JMenu("Game");
 			game.add(createMenuItem("Choose Map", "chooseMap"));
-			game.add(createMenuItem("Load Replay ...", "load"));
-			game.add(new JSeparator());
-			game.add(createMenuItem("Save Replay ...", "save"));
 			game.add(new JSeparator());
 			game.add(m_realtime = createCheckboxMenuItem("Real-time Mode", "realtime"));
 			game.add(m_debug = createCheckboxMenuItem("Draw Debug Data", "debug"));
@@ -446,6 +453,7 @@ public class GUI extends JFrame{
 			players.add(m_player1UCIKen = createRadioMenuItem("UCITron", "1uci", player1));
 			players.add(m_player1UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "1ucijeff", player1));
 			players.add(m_player1UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "1ucitimed", player1));
+			players.add(m_player1UCIArt = createRadioMenuItem("UCITron (Articulation Version)", "1art", player1));
 			players.add(m_player1AI1 = createRadioMenuItem("Google AI (a1k0n)", "1a1k0n", player1));
 			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1ucitimed", player1));
 			
@@ -456,6 +464,7 @@ public class GUI extends JFrame{
 			players.add(m_player2UCIKen = createRadioMenuItem("UCITron", "2uci", player2));
 			players.add(m_player2UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "2ucijeff", player2));
 			players.add(m_player2UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "2ucitimed", player2));
+			players.add(m_player2UCIArt = createRadioMenuItem("UCITron (Articulation Version)", "2art", player2));
 			players.add(m_player2AI1 = createRadioMenuItem("Google AI (a1k0n)", "2a1k0n", player2));
 			players.add(m_player2AI2 = createRadioMenuItem("Google AI (Nathan)", "2nathan", player2));
 			add(players);
@@ -477,11 +486,6 @@ public class GUI extends JFrame{
 			    	setMode(Mode.Game);
 			    	needsRedraw();
 			    }
-			    
-			} else if (command.equals("load")) {
-				// TODO.
-			} else if (command.equals("save")) {
-				// TODO.
 			} else if (command.equals("realtime")) {
 				setRealtime(m_realtime.getState());
 			} else if (command.equals("debug")) {
@@ -517,7 +521,8 @@ public class GUI extends JFrame{
 				menuPlayer1Changed(PlayerBackend.AINathan);
 			} else if (command.equals("1ucitimed")) {
 				menuPlayer1Changed(PlayerBackend.AITimed);
-			
+			} else if (command.equals("1art")) {
+				menuPlayer1Changed(PlayerBackend.AIArticulation);
 				
 			} else if (command.equals("2human")) {
 				menuPlayer2Changed(PlayerBackend.Human);
@@ -531,6 +536,8 @@ public class GUI extends JFrame{
 				menuPlayer2Changed(PlayerBackend.AIA1k0n);
 			} else if (command.equals("2nathan")) {
 				menuPlayer2Changed(PlayerBackend.AINathan);
+			} else if (command.equals("2art")) {
+				menuPlayer2Changed(PlayerBackend.AIArticulation);
 			}
 		}
 		
@@ -565,6 +572,10 @@ public class GUI extends JFrame{
 					break;
 				case AITimed:
 					m_player1UCITimed.setSelected(true);
+					break;
+				case AIArticulation:
+					m_player1UCIArt.setSelected(true);
+					break;
 			}
 			
 			menuPlayer1Changed(type);
@@ -589,6 +600,10 @@ public class GUI extends JFrame{
 					break;
 				case AITimed:
 					m_player2UCITimed.setSelected(true);
+					break;
+				case AIArticulation:
+					m_player2UCIArt.setSelected(true);
+					break;
 			}
 			
 			menuPlayer2Changed(type);

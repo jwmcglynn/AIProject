@@ -11,6 +11,9 @@ public class HumanPlayer extends Player {
 	}
 	
 	@Override
+	public void reinitialize(){
+	}
+	@Override
 	public String toString() {
 		return "human";
 	}

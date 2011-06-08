@@ -37,10 +37,7 @@ public abstract class Player {
 		return false;
 	}
 
-	public void reinitialize() {
-
-	}
-
+	public abstract void reinitialize();
 	/**
 	 * Handle key press events.
 	 * 

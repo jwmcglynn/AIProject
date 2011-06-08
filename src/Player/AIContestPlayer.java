@@ -57,6 +57,10 @@ public class AIContestPlayer extends AIPlayer {
 		}
 	}
 	
+	public void reinitialize(){
+		
+	}
+	
 	public TronMap.Direction move(TronMap map) throws InterruptedException {
 		/*if (m_process == null) {
 			System.err.println("Process not created.");
