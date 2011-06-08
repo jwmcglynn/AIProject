@@ -53,6 +53,11 @@ public class AITimedPlayer extends AIPlayer{
 
 	////////
 
+	public void reinitialize() {
+		m_state = null;
+		m_endgameMode = false;
+		m_map = null;
+	}
 	static class Move {
 		PlayerType player;
 		Point oldPos;

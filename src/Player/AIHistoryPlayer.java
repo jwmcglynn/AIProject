@@ -6,7 +6,7 @@ import GUI.TronMap;
 import GUI.TronMap.PlayerType;
 
 public class AIHistoryPlayer extends AIPlayer{
-	private final Iterator<TronMap.Direction> history;
+	private Iterator<TronMap.Direction> history;
 	public AIHistoryPlayer(PlayerType currentPlayer,String history) {
 		super(currentPlayer);
 		for (char c: history.toCharArray())
@@ -33,5 +33,11 @@ public class AIHistoryPlayer extends AIPlayer{
 		super.updateGUI();
 		move++;
 		return history.next();
+	}
+	@Override
+	public void reinitialize() {
+		this.history = moves.iterator();
+		move = 0;
+		
 	}
 }

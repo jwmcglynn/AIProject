@@ -55,7 +55,9 @@ public class AIContestPlayer extends AIPlayer {
 				return Runtime.getRuntime().exec(new String[] {"java", "-cp", "bin", "GoogleAI/Nathan/MyTronBot"});
 		}
 	}
-	
+	public void reinitialize(){
+		
+	}
 	public TronMap.Direction move(TronMap map) {
 		/*if (m_process == null) {
 			System.err.println("Process not created.");

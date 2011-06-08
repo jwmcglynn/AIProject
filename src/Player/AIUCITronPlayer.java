@@ -365,6 +365,11 @@ public class AIUCITronPlayer extends AIPlayer{
 	}
 
 	@Override
+	public void reinitialize(){
+		
+	}
+	
+	@Override
 	public String toString() {
 		return "ucitron";
 	}
