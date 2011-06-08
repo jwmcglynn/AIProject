@@ -31,7 +31,7 @@ public abstract class Player {
 		return moves;
 	}
 
-	abstract public TronMap.Direction move(TronMap map);
+	abstract public TronMap.Direction move(TronMap map) throws InterruptedException;
 
 	public boolean isAIPlayer() {
 		return false;

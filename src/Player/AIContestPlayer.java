@@ -5,6 +5,7 @@ import GUI.TronMap.PlayerType;
 
 import java.awt.Point;
 import java.io.*;
+import java.lang.InterruptedException;
 
 public class AIContestPlayer extends AIPlayer {
 	Process m_process = null;
@@ -56,7 +57,7 @@ public class AIContestPlayer extends AIPlayer {
 		}
 	}
 	
-	public TronMap.Direction move(TronMap map) {
+	public TronMap.Direction move(TronMap map) throws InterruptedException {
 		/*if (m_process == null) {
 			System.err.println("Process not created.");
 			return facingDir;
@@ -68,6 +69,7 @@ public class AIContestPlayer extends AIPlayer {
 		} catch (IOException e) {
 			System.err.println("Could not create AI process.");
 			e.printStackTrace();
+			throw new InterruptedException();
 		}
 		BufferedWriter processInput = new BufferedWriter(new OutputStreamWriter(m_process.getOutputStream()));
 		BufferedReader processOutput = new BufferedReader(new InputStreamReader(m_process.getInputStream()));
@@ -79,7 +81,7 @@ public class AIContestPlayer extends AIPlayer {
 		} catch (IOException e) {
 			System.err.println("Error writing current state to AI process.");
 			e.printStackTrace();
-			return facingDir;
+			throw new InterruptedException();
 		}
 	  
 		// The map, one row per line in ASCII.
@@ -111,23 +113,24 @@ public class AIContestPlayer extends AIPlayer {
 			processInput.flush();
 		} catch (IOException e) {
 			System.err.println("Error writing current state to AI process.");
-			return facingDir;
+			throw new InterruptedException();
 		}
 		
 		// Read result.
 		int dir;
 		try {
 			String result = processOutput.readLine();
-			// System.err.println("READ: " + result);
+			System.err.println("READ: " + result);
 			
 			dir = Integer.parseInt(result);
 		} catch (NumberFormatException e) {
 			System.err.println("Could not parse result from command line AI.");
-			return facingDir;
+			e.printStackTrace();
+			throw new InterruptedException();
 		} catch (IOException e) {
 			System.err.println("Could not read result from command line AI.");
 			e.printStackTrace();
-			return facingDir;
+			throw new InterruptedException();
 		}
 		
 		//  1
@@ -148,6 +151,7 @@ public class AIContestPlayer extends AIPlayer {
 				break;
 			default:
 				System.err.println("Could not read result from command line AI.");
+				throw new InterruptedException();
 		}
 		
 		return facingDir;

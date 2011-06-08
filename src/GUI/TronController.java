@@ -1,4 +1,5 @@
 package GUI;
+import java.awt.Point;
 import java.util.LinkedList;
 
 import Player.*;
@@ -63,8 +64,8 @@ public class TronController {
 		m_player2.reinitialize();
 	}
 	
-	public void update() {
-		if (m_gameOver) return;
+	public boolean update() {
+		if (m_gameOver) return true;
 		
 		// Save game state.
 		m_history.add(m_map);
@@ -81,7 +82,12 @@ public class TronController {
 		}
 		
 		long startTime = System.nanoTime();
-		TronMap.Direction dir1 = m_player1.move(map);
+		TronMap.Direction dir1;
+		try {
+			dir1 = m_player1.move(map);
+		} catch (InterruptedException e) {
+			return false;
+		}
 		long endTime = System.nanoTime();
 		if (debug) System.out.println("Player1 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
@@ -95,7 +101,12 @@ public class TronController {
 		
 		// Run player2 move.
 		startTime = System.nanoTime();
-		TronMap.Direction dir2 = m_player2.move(map);
+		TronMap.Direction dir2;
+		try {
+			dir2 = m_player2.move(map);
+		} catch (InterruptedException e) {
+			return false;
+		}
 		endTime = System.nanoTime();
 		if (debug) System.out.println("Player2 move complete, took " + ((double) (endTime - startTime)) / 1000000.0f);
 		
@@ -126,6 +137,7 @@ public class TronController {
 		}
 		
 		m_map = map;
+		return true;
 	}
 	
 	public void restart() {
