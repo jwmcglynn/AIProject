@@ -60,8 +60,8 @@ public class TronController {
 	}
 	
 	public void reinitializePlayers() {
-		m_player1.reinitialize();
-		m_player2.reinitialize();
+		if (m_player1 != null) m_player1.reinitialize();
+		if (m_player2 != null) m_player2.reinitialize();
 	}
 	
 	public boolean update() {
