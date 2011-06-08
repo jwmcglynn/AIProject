@@ -66,6 +66,7 @@ public class TronController {
 	
 	public boolean update() {
 		if (m_gameOver) return true;
+		if (m_player1 == null || m_player2 == null) return true;
 		
 		// Save game state.
 		m_history.add(m_map);

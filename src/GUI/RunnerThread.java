@@ -5,6 +5,7 @@ public class RunnerThread extends Thread {
 	final int m_frameDelay = 250; // milliseconds.
 	public volatile boolean m_abort = false;
 	public volatile boolean m_realtime = false;
+	public volatile boolean m_step = false;
 	
 	RunnerThread(GUI gui) {
 		m_gui = gui;
@@ -12,15 +13,17 @@ public class RunnerThread extends Thread {
 
 	public void run() {
 		while (!m_abort) {
-			if (!m_realtime) {
-				try {
-					synchronized (this) {
-						wait();
+			synchronized (this) {
+				while (!m_realtime && !m_step) {
+					try {
+						wait(100);
+						if (m_abort) return;
+					} catch (InterruptedException e) {
 					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 			}
+			
+			m_step = false;
 			
 			long startTime = System.nanoTime();
 			m_gui.controller.update();

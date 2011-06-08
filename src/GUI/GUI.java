@@ -151,6 +151,7 @@ public class GUI extends JFrame{
 	private void menuStep() {
 		startRealtimeThread();
 		synchronized (thread) {
+			thread.m_step = true;
 			thread.notify();
 		}
 	}
@@ -468,7 +469,7 @@ public class GUI extends JFrame{
 			players.add(m_player1UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "1ucitimed", player1));
 			players.add(m_player1UCIArt = createRadioMenuItem("UCITron (Articulation Version)", "1art", player1));
 			players.add(m_player1AI1 = createRadioMenuItem("Google AI (a1k0n)", "1a1k0n", player1));
-			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1ucitimed", player1));
+			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1nathan", player1));
 			
 			players.add(new JSeparator());
 			players.add(createMenuItem("Player 2 (Blue)", ""));
