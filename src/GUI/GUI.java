@@ -464,10 +464,11 @@ public class GUI extends JFrame{
 			players.add(createMenuItem("Player 1 (Red)", ""));
 			ButtonGroup player1 = new ButtonGroup();
 			players.add(m_player1Human = createRadioMenuItem("Human (WASD)", "1human", player1));
-			players.add(m_player1UCIKen = createRadioMenuItem("UCITron", "1uci", player1));
-			players.add(m_player1UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "1ucijeff", player1));
-			players.add(m_player1UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "1ucitimed", player1));
-			players.add(m_player1UCIArt = createRadioMenuItem("UCITron (Articulation Version)", "1art", player1));
+			players.add(m_player1UCIKen = createRadioMenuItem("UCIBasicTron", "1uci", player1));
+			players.add(m_player1UCIJeff = createRadioMenuItem("UCIJeffTron", "1ucijeff", player1));
+			players.add(m_player1UCITimed = createRadioMenuItem("UCITimedTron", "1ucitimed", player1));
+			players.add(m_player1UCIArt = createRadioMenuItem("UCIArticulationTron (Not Working)", "1art", player1));
+			m_player1UCIArt.setEnabled(false);
 			players.add(m_player1AI1 = createRadioMenuItem("Google AI (a1k0n)", "1a1k0n", player1));
 			players.add(m_player1AI2 = createRadioMenuItem("Google AI (Nathan)", "1nathan", player1));
 			
@@ -475,10 +476,11 @@ public class GUI extends JFrame{
 			players.add(createMenuItem("Player 2 (Blue)", ""));
 			ButtonGroup player2 = new ButtonGroup();
 			players.add(m_player2Human = createRadioMenuItem("Human (Arrow Keys)", "2human", player2));
-			players.add(m_player2UCIKen = createRadioMenuItem("UCITron", "2uci", player2));
-			players.add(m_player2UCIJeff = createRadioMenuItem("UCITron (Jeff's Version)", "2ucijeff", player2));
-			players.add(m_player2UCITimed = createRadioMenuItem("UCITron (RealTime Version)", "2ucitimed", player2));
-			players.add(m_player2UCIArt = createRadioMenuItem("UCITron (Articulation Version)", "2art", player2));
+			players.add(m_player2UCIKen = createRadioMenuItem("UCIBasicTron", "2uci", player2));
+			players.add(m_player2UCIJeff = createRadioMenuItem("UCIJeffTron", "2ucijeff", player2));
+			players.add(m_player2UCITimed = createRadioMenuItem("UCITimedTron", "2ucitimed", player2));
+			players.add(m_player2UCIArt = createRadioMenuItem("UCIArticulationTron (Not Working)", "2art", player2));
+			m_player2UCIArt.setEnabled(false);
 			players.add(m_player2AI1 = createRadioMenuItem("Google AI (a1k0n)", "2a1k0n", player2));
 			players.add(m_player2AI2 = createRadioMenuItem("Google AI (Nathan)", "2nathan", player2));
 			add(players);
